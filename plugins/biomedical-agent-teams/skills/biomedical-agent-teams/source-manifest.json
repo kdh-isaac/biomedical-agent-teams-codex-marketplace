@@ -1,0 +1,92 @@
+{
+  "version": "0.2.2",
+  "runtime": "codex",
+  "entrypoint": "SKILL.md",
+  "agent_count": 35,
+  "command_count": 6,
+  "template_count": 1,
+  "workflow_spine": [
+    "protocol-context-locker",
+    "entity-normalizer",
+    "life-science-lead-scientist",
+    "scenario-playbook-router",
+    "specialist-lanes",
+    "central-claim-ledger-evidence-graph",
+    "audit-gates",
+    "claim-level-evidence-verifier",
+    "citation-verifier",
+    "scientific-writer-citation-agent",
+    "post-write-final-validator"
+  ],
+  "commands": [
+    "biomedical-research-council",
+    "idea-discovery-team",
+    "omics-analysis-team",
+    "evidence-audit-team",
+    "experiment-design-team",
+    "translational-scout-team"
+  ],
+  "new_in_v0_2": [
+    "protocol-context-locker",
+    "central-claim-ledger-evidence-graph",
+    "risk-of-bias-study-quality-auditor",
+    "safety-ethics-privacy-dual-use-auditor",
+    "post-write-final-validator"
+  ],
+  "new_in_v0_2_1": [
+    "mode-routing-matrix",
+    "fixed-field-claim-ledger-template",
+    "excluded-or-not-verified-claim-tracking",
+    "track-specific-omics-checklists",
+    "active-workspace-output-path-resolution",
+    "compact-vs-audit-bundle-final-output"
+  ],
+  "new_in_v0_2_2": [
+    "mandatory-preflight-compliance-contract",
+    "agent-use-terminology-for-codex-inline-vs-subagent-execution",
+    "mode-specific-minimum-artifacts",
+    "safe-mode-note-for-low-risk-public-only-triggered-workflows",
+    "final-workflow-label-and-skipped-gate-reporting",
+    "biomedical-research-council-post-write-self-check"
+  ],
+  "agent_roster": [
+    "bayesian-decision-modeler",
+    "biostats-repro-auditor",
+    "bulk-deg-analyst",
+    "causal-inference-confounder-analyst",
+    "central-claim-ledger-evidence-graph",
+    "citation-verifier",
+    "claim-level-evidence-verifier",
+    "clinical-trial-operations-scout",
+    "contradiction-red-team",
+    "entity-normalizer",
+    "experimental-design-planner",
+    "figure-schematic-director",
+    "grant-ip-landscape-scout",
+    "hypothesis-generator",
+    "hypothesis-ranker",
+    "immunology-mechanism-critic",
+    "life-science-lead-scientist",
+    "life-science-literature-curator",
+    "model-card-dataset-card-writer",
+    "omics-code-reviewer",
+    "omics-data-curator",
+    "omics-provenance-validator",
+    "omics-reporter",
+    "pathway-interpreter",
+    "post-write-final-validator",
+    "protocol-context-locker",
+    "protocol-reagent-logistics-planner",
+    "provenance-traceability-architect",
+    "public-omics-analyst",
+    "risk-of-bias-study-quality-auditor",
+    "safety-ethics-privacy-dual-use-auditor",
+    "scenario-playbook-router",
+    "scientific-literature-researcher",
+    "scientific-writer-citation-agent",
+    "scrna-qc-specialist"
+  ],
+  "templates": [
+    "claim-ledger-template"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "biomedical-agent-teams-marketplace",
+  "interface": {
+    "displayName": "Biomedical Agent Teams"
+  },
+  "plugins": [
+    {
+      "name": "biomedical-agent-teams",
+      "source": {
+        "source": "local",
+        "path": "./plugins/biomedical-agent-teams"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Research"
+    }
+  ]
+}

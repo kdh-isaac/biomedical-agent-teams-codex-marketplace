@@ -1,0 +1,45 @@
+{
+  "name": "biomedical-agent-teams",
+  "version": "0.2.2+codex.20260609105453",
+  "description": "Codex-native biomedical agent-team router for life-science research, hypothesis validation, literature and public-omics evidence synthesis, claim-level verification, statistical audit, experiment design, translational scouting, and scientific writing support.",
+  "author": {
+    "name": "Donghyun Kim Local Research Workflow"
+  },
+  "license": "MIT",
+  "keywords": [
+    "biomedical-research",
+    "life-science",
+    "agent-team",
+    "CAR-T",
+    "immunology",
+    "omics",
+    "literature-review",
+    "evidence-synthesis",
+    "clinical-trials",
+    "experiment-design",
+    "biostatistics",
+    "Codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Biomedical Agent Teams",
+    "shortDescription": "Protocol-locked biomedical research council with evidence, omics, audit, and design agents.",
+    "longDescription": "A Codex-native biomedical agent-team suite for structured life-science research. It locks context of use, normalizes biomedical entities, coordinates specialist lanes for hypothesis discovery, literature retrieval, public omics analysis, mechanism and causal reasoning, experiment design, clinical/regulatory/IP scouting, and routes all claims through a fixed-field central claim ledger, audit gates, citation verification, ledger-only writing, excluded-claim tracking, and post-write validation.",
+    "developerName": "Donghyun Kim Local Research Workflow",
+    "category": "Research",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "biomedical-research-council TET2 KO plus IL-21 armored CAR-T persistence hypothesis",
+      "omics-analysis-team find public datasets to test IL-21-STAT3-FOXO1 stem-like memory signatures",
+      "omics-analysis-team TCGA survival analysis for DUSP5 high versus low in CD3-high solid tumors --track survival --mode plan",
+      "experiment-design-team validate whether IL-21-STAT3-FOXO1 supports stem-like CAR-T persistence --mode deep",
+      "evidence-audit-team verify this CAR-T mechanism claim with primary literature and public databases",
+      "translational-scout-team benchmark IL-21 armored CAR-T safety and IP differentiation --mode standard"
+    ],
+    "brandColor": "#0F766E"
+  }
+}
