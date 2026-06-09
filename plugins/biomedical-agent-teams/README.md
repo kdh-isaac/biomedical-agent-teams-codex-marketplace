@@ -6,11 +6,28 @@ Codex Desktop compatible plugin wrapper for the `biomedical-agent-teams` skill.
 
 - `.agents/plugins/marketplace.json`: local marketplace metadata.
 - `skills/biomedical-agent-teams/`: Codex-native biomedical agent-team skill,
-  including 35 agent prompts, 6 workflow recipes, 10 contract schemas, 9
-  templates, 6 references, a fixed-field claim ledger, biomedical passport,
+  including 35 agent prompts, 6 workflow recipes, 10 contract schemas, 10
+  templates, 7 references, a fixed-field claim ledger, biomedical passport,
   runtime capability preflight, source corpus lock, workflow-run state, stage
-  evaluation, hypothesis tournament, independent-review policy, and
-  integrity-gate resources.
+  evaluation, hypothesis tournament, independent-review policy, inline-first
+  hybrid execution, selective spawned review, team-level spawned workflow DAGs,
+  and integrity-gate resources.
+
+## v0.3.4 Updates
+
+- Makes BMAT explicitly lead-controlled and inline-first by default.
+- Adds `inline_first_selective_review` for professional/auditable workflows:
+  the main workflow runs inline while only selected reviewer roles are spawned
+  for independent evidence, citation, contradiction, biostats, provenance, or
+  risk-of-bias review.
+- Adds `team_level_selective_dag` for broad decisions: selected command-level
+  teams can be spawned as workflow bundles in dependency-aware phases.
+- Disables nested spawning by default. A spawned team runs its internal recipe
+  inline and returns one formal team report unless explicit nested-spawn
+  approval is recorded.
+- Adds `references/hybrid-execution-policy.md`,
+  `templates/team-spawn-plan-template.md`, and execution-strategy fields to the
+  preflight and workflow-run contracts.
 
 ## v0.3.2 Updates
 

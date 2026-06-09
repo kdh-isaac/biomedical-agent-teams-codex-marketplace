@@ -2,7 +2,7 @@
 
 Local Codex Desktop marketplace package for the Biomedical Agent Teams plugin.
 
-Current plugin version: `0.3.2+codex.20260609`.
+Current plugin version: `0.3.4+codex.20260610`.
 
 ## Install
 
@@ -16,7 +16,8 @@ The plugin body is in `plugins/biomedical-agent-teams/` and exposes the
 fixed-field claim-ledger template, contract schemas, biomedical passport state,
 runtime capability preflight, source corpus lock, workflow-run state, stage
 evaluation, hypothesis tournament, independent-review policy, and
-integrity-gate resources.
+inline-first hybrid execution, selective spawned review, team-level spawned
+workflow DAGs, and integrity-gate resources.
 
 ## Workflow Structure
 
@@ -26,10 +27,17 @@ flowchart TD
     B --> C["Protocol and context lock"]
     C --> D["Source corpus lock"]
     D --> E["Select workflow recipe"]
-    E --> F{"Mode"}
+    E --> Q["Lock execution strategy"]
+    Q --> F{"Mode"}
     F -->|"quick"| G["Lead answer with minimal evidence checks"]
     F -->|"standard"| H["Specialist lanes plus claim ledger"]
     F -->|"deep or audit"| I["Specialist lanes plus workflow-run state"]
+    Q --> R{"Hybrid needed?"}
+    R -->|"selected review"| S["Spawn selected reviewer lanes"]
+    R -->|"team DAG"| T["Spawn selected team bundles"]
+    S --> U["Ledger handoff"]
+    T --> U
+    U --> M
     I --> J["Biomedical passport"]
     I --> K["Stage S1-S5 evaluation"]
     I --> L["Independent review policy"]

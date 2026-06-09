@@ -5,6 +5,21 @@ audit gates, writer restriction, and post-write final validation.
 
 Codex uses `SKILL.md` as the router and treats `agents/*.md` as role prompts.
 
+## v0.3.4 Updates
+
+- Defines BMAT as lead-controlled and inline-first by default.
+- Adds selective spawned review for high-confidence or auditable outputs without
+  mechanically spawning every role.
+- Adds dependency-aware team-level spawned workflows for broad decisions that
+  genuinely benefit from parallel `idea-discovery-team`, `omics-analysis-team`,
+  `translational-scout-team`, `experiment-design-team`, or
+  `evidence-audit-team` bundles.
+- Requires spawned teams to run internal roles inline and return one formal team
+  report unless nested spawning is explicitly authorized.
+- Adds `references/hybrid-execution-policy.md`,
+  `templates/team-spawn-plan-template.md`, and execution-strategy fields in the
+  preflight/workflow-run schemas.
+
 ## v0.3.2 Updates
 
 - Adds benchmark hygiene guardrails for BioAgentBench-style tasks with hidden

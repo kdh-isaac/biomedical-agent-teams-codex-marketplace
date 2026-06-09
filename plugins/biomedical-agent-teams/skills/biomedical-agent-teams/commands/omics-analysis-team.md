@@ -18,9 +18,24 @@ preflight and a compact preflight contract with:
 `requested_alias`, `selected_mode`, `deliverable_type`, `evidence_scope`,
 `risk_class`, `required_role_outputs`, `skipped_role_outputs_with_reason`,
 `external_tools_allowed`, `file_write_plan`, `stop_criteria`, and
-`checkpoint_plan`. If runtime capability preflight or this contract is absent,
+`checkpoint_plan`. For v0.3.4, also record `execution_strategy`,
+`spawned_review_plan`, `team_spawn_plan`,
+`all_role_spawn_avoidance_reason`, `nested_spawn_policy`, and
+`post_team_audit_plan`. If runtime capability preflight or this contract is absent,
 label the result as a compact or partial workflow rather than a full omics
 analysis audit.
+
+## Spawned Team Bundle Policy
+
+This recipe may run as a selected team-level spawned subagent when omics
+feasibility, plan, run, or audit can proceed independently from other BMAT
+decision axes. If spawned, run the internal roles inline, do not spawn child
+agents unless `nested_spawn_policy` explicitly allows it, and return one formal
+omics team report. For full `run`, require S1-S3 locks before full analysis;
+otherwise return plan or feasibility status. The report must include accession
+and metadata locks, S1-S5 status, provenance, statistics, result-claim limits,
+confidence, files changed or `none`, checks run or skipped, and a central
+claim-ledger handoff.
 
 ## Team
 
@@ -74,6 +89,8 @@ analysis audit.
 15. `omics-reporter` can report only verified claim-ledger material.
 16. Run the integrity gate and `post-write-final-validator` before final release.
 17. Calibrate claims as exploratory versus validated, association versus causality, and prognostic versus predictive.
+18. If this was a spawned team output, provide `spawned_team_output_status`,
+    `nested_spawn_used`, and `ledger_handoff_claim_ids` before final reporting.
 
 ## Stage-Gated Run Model
 
@@ -134,4 +151,5 @@ audit bundle:
 16. independent-review, validation-gate, and post-write verdicts
 17. generated files, manifest, audit bundle, and next step
 18. workflow-run state, biomedical passport status, and omics run manifest status
-19. final workflow label and skipped gates with reasons
+19. spawned team output status and ledger handoff if this recipe was spawned
+20. final workflow label and skipped gates with reasons

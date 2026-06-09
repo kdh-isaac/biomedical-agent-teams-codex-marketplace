@@ -18,9 +18,24 @@ preflight and a compact preflight contract with:
 `requested_alias`, `selected_mode`, `deliverable_type`, `evidence_scope`,
 `risk_class`, `required_role_outputs`, `skipped_role_outputs_with_reason`,
 `external_tools_allowed`, `file_write_plan`, `stop_criteria`, and
-`checkpoint_plan`. If runtime capability preflight or this contract is absent,
+`checkpoint_plan`. For v0.3.4, also record `execution_strategy`,
+`spawned_review_plan`, `team_spawn_plan`,
+`all_role_spawn_avoidance_reason`, `nested_spawn_policy`, and
+`post_team_audit_plan`. If runtime capability preflight or this contract is absent,
 label the result as a compact or partial workflow rather than a full
 translational audit.
+
+## Spawned Team Bundle Policy
+
+This recipe may run as a selected team-level spawned subagent in the first
+parallel phase when clinical, regulatory, IP, competitive, or operational
+scouting is independent from mechanism or omics analysis. If spawned, run the
+internal roles inline, do not spawn child agents unless `nested_spawn_policy`
+explicitly allows it, and return one formal translational-scout team report.
+The report must include entity/trial/source locks, translational flags,
+clinical-advice boundary, IP/regulatory caveats, contradiction findings,
+confidence, files changed or `none`, checks run or skipped, and a central
+claim-ledger handoff.
 
 ## Team
 
@@ -56,6 +71,8 @@ translational audit.
 13. For `standard`, `deep`, and `audit`, maintain workflow-run state and biomedical passport state and run the integrity gate before final output.
 14. Apply `references/independent-review-policy.md` before describing validation as independent.
 15. Writer uses only verified ledger material; run `post-write-final-validator` before final output.
+16. If this was a spawned team output, provide `spawned_team_output_status`,
+    `nested_spawn_used`, and `ledger_handoff_claim_ids` before final synthesis.
 
 ## Mode Routing
 
@@ -88,4 +105,5 @@ legal, regulatory, or medical advice; frame outputs as research support.
 14. post-write validation verdict
 15. workflow-run state, biomedical passport, and integrity-gate status
 16. recommended next translational action
-17. final workflow label and skipped gates with reasons
+17. spawned team output status and ledger handoff if this recipe was spawned
+18. final workflow label and skipped gates with reasons

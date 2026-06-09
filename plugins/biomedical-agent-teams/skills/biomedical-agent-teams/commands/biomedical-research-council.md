@@ -10,7 +10,7 @@ User request: $ARGUMENTS
 
 Run a lead-controlled biomedical research council. Default to Korean. Treat the user as an expert in immunology, CAR cell therapy, and public-omics analysis.
 
-## v0.3.0 Spine
+## v0.3.4 Spine
 
 1. Run runtime capability preflight first: record active Codex support for web,
    shell/code execution, file read/write, network/database access, spawned
@@ -20,14 +20,21 @@ Run a lead-controlled biomedical research council. Default to Korean. Treat the 
 4. Lock the source corpus for source-backed outputs using stable identifiers,
    retrieval dates/versions, inclusion status, and claim use.
 5. Use `life-science-lead-scientist` and `scenario-playbook-router` to build the task graph and select the smallest useful specialist lanes.
-6. Maintain `central-claim-ledger-evidence-graph` throughout. Specialist lanes must hand off atomic claims, sources/artifacts, uncertainty, and contradictions to the ledger.
-7. For `deep`, `audit`, translational, manuscript-support, generated-file, or long-running work, maintain workflow-run state and biomedical passport state using `templates/workflow-run-template.md` and `templates/biomedical-passport-template.md` or the same field order.
-8. For omics, generated-file, or long-running workflows, run S1-S5 stage evaluation and downgrade or block inference/reporting when S3 Validate does not pass.
-9. Run required audit gates before synthesis: claim boundary, causal/confounder, biostats/reproducibility, provenance, risk-of-bias/study quality, safety/ethics/privacy/dual-use, contradiction red-team, and uncertainty/evidence-to-decision.
-10. Run pre-synthesis `claim-level-evidence-verifier` and `citation-verifier`.
-11. `scientific-writer-citation-agent` may use only verified claim-ledger material.
-12. Apply `references/independent-review-policy.md` before using independent-review wording.
-13. Run the integrity gate and `post-write-final-validator` before final output for high-confidence source-backed deliverables.
+6. Lock the execution strategy using `references/hybrid-execution-policy.md`: default inline-first, add selective spawned review or dependency-aware team-level spawned workflows only when they materially improve review quality.
+7. If `team_level_selective_dag` is selected, run dependency-aware command-level
+   team bundles before final ledger synthesis; Phase 2 teams must wait for
+   narrowed candidate claims or designs.
+8. Maintain `central-claim-ledger-evidence-graph` throughout. Specialist lanes and spawned teams must hand off atomic claims, sources/artifacts, uncertainty, and contradictions to the ledger.
+9. For `deep`, `audit`, translational, manuscript-support, generated-file, or long-running work, maintain workflow-run state and biomedical passport state using `templates/workflow-run-template.md` and `templates/biomedical-passport-template.md` or the same field order.
+10. For omics, generated-file, or long-running workflows, run S1-S5 stage evaluation and downgrade or block inference/reporting when S3 Validate does not pass.
+11. Run required audit gates before synthesis: claim boundary, causal/confounder, biostats/reproducibility, provenance, risk-of-bias/study quality, safety/ethics/privacy/dual-use, contradiction red-team, and uncertainty/evidence-to-decision.
+12. If `inline_first_selective_review` is selected, run spawned reviewer lanes
+    after ledger claims exist and merge accepted reviewer findings back to the
+    ledger.
+13. Run pre-synthesis `claim-level-evidence-verifier` and `citation-verifier`.
+14. `scientific-writer-citation-agent` may use only verified claim-ledger material.
+15. Apply `references/independent-review-policy.md` before using independent-review wording.
+16. Run the integrity gate and `post-write-final-validator` before final output for high-confidence source-backed deliverables.
 
 ## Required Preflight Contract
 
@@ -46,15 +53,44 @@ capability preflight and then a compact preflight contract:
 9. `file_write_plan`
 10. `stop_criteria`
 11. `checkpoint_plan`
+12. `execution_strategy`
+13. `spawned_review_plan`
+14. `team_spawn_plan`
+15. `all_role_spawn_avoidance_reason`
+16. `nested_spawn_policy`
+17. `post_team_audit_plan`
 
 If runtime capability preflight or this contract is absent, the final output
 must be labeled as a compact or partial workflow, not as a full Biomedical
 Research Council audit.
 
+## Hybrid Execution Policy
+
+Default to a lead-controlled inline workflow. The lead/router keeps protocol
+lock, source scope, central claim ledger, workflow-run state, and final
+synthesis. Use spawned subagents selectively:
+
+- `inline_first_selective_review`: run the main workflow inline, then spawn
+  only reviewer roles needed for independence, such as evidence verification,
+  citation checking, contradiction red-team, biostats, provenance, or
+  risk-of-bias review.
+- `team_level_selective_dag`: when the question has independent decision axes,
+  spawn selected command-level teams as workflow bundles. Initial independent
+  teams may include `idea-discovery-team`, `omics-analysis-team` in plan or
+  feasibility mode, and `translational-scout-team`. Dependent teams such as
+  `experiment-design-team` and `evidence-audit-team` usually run after the main
+  lead narrows candidate claims or designs.
+
+Do not spawn every role or every team by default. A spawned team runs its own
+internal recipe inline and returns one formal team report; nested spawning is
+off unless the user explicitly authorizes it. Use
+`templates/team-spawn-plan-template.md` for the team dependency graph and
+review handoff.
+
 ## Routing
 
-First emulate `scenario-playbook-router` and record the lane-selection rationale
-to choose the smallest useful playbook:
+First emulate `scenario-playbook-router` and record the lane-selection and
+execution-strategy rationale to choose the smallest useful playbook:
 
 - `mechanism-review`
 - `public-omics-feasibility`
@@ -99,9 +135,9 @@ Use the smallest defensible mode:
 | Mode | Agent selection |
 |---|---|
 | `quick` | `protocol-context-locker`, optional `entity-normalizer`, `life-science-lead-scientist`, one specialist lane, compact final validator check. |
-| `standard` | Quick set plus the relevant literature / omics / mechanism / experiment / translation lane, compact `central-claim-ledger-evidence-graph`, targeted `claim-level-evidence-verifier` and `citation-verifier`. |
-| `deep` | Standard set plus required audit gates: causal/confounder, biostats when data are analyzed, provenance, risk-of-bias, contradiction red-team, safety auditor when the trigger criteria are met, and post-write validation. |
-| `audit` | Treat the request as a defensibility audit: decompose claims, build the fixed-field ledger, verify citations/provenance/statistics/causal language, then return pass / pass-with-revisions / block. |
+| `standard` | Quick set plus the relevant literature / omics / mechanism / experiment / translation lane, compact `central-claim-ledger-evidence-graph`, targeted `claim-level-evidence-verifier` and `citation-verifier`; optionally spawn one selected reviewer or team when independence materially helps. |
+| `deep` | Standard set plus required audit gates: causal/confounder, biostats when data are analyzed, provenance, risk-of-bias, contradiction red-team, safety auditor when the trigger criteria are met, and post-write validation; optionally use a 1-3 output selective review or team DAG. |
+| `audit` | Treat the request as a defensibility audit: decompose claims, build the fixed-field ledger, verify citations/provenance/statistics/causal language, then return pass / pass-with-revisions / block; use spawned review for independent audit lanes when available. |
 
 Use `templates/claim-ledger-template.md` for `standard`, `deep`, and `audit`.
 For quick conceptual answers, preserve claim boundaries without forcing a full
@@ -151,7 +187,7 @@ Audit bundle final includes:
 
 1. working conclusion
 2. selected playbook, role prompts read, formal role outputs produced, tool calls used, and spawned subagents if any
-3. runtime capability preflight and downgrade rule
+3. runtime capability preflight, execution strategy, spawn plan, and downgrade rule
 4. normalized entities
 5. protocol/context lock summary
 6. source corpus lock status
@@ -165,10 +201,11 @@ Audit bundle final includes:
 14. claim and citation verification status
 15. useful but excluded or not-ledger-verified claims
 16. independent-review status
-17. post-write validation verdict
-18. workflow-run state, biomedical passport, and integrity-gate status
-19. final claim-strength verdict
-20. final workflow label and skipped gates with reasons
+17. spawned review/team output summary and post-team audit status
+18. post-write validation verdict
+19. workflow-run state, biomedical passport, and integrity-gate status
+20. final claim-strength verdict
+21. final workflow label and skipped gates with reasons
 
 Final workflow label must be one of:
 
@@ -198,6 +235,11 @@ Before final release, answer yes/no internally or visibly:
 14. Was workflow-run state and biomedical passport state produced when required?
 15. Did the integrity gate check BMAT-specific failure modes when required?
 16. Is the final workflow label accurate?
+17. Was execution strategy recorded and justified?
+18. If spawned reviewers or teams were used, did each return a formal output and
+    did the lead map accepted findings back to the central claim ledger?
+19. If broad spawning was requested, was all-role/team spawning avoidance or
+    nested-spawn authorization documented?
 
 If any answer is "no", downgrade the final workflow label and avoid claiming
 full council or audit compliance.

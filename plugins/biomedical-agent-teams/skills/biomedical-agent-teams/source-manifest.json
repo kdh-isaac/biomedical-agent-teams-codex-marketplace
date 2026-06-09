@@ -1,12 +1,12 @@
 {
-  "version": "0.3.2",
+  "version": "0.3.4",
   "runtime": "codex",
   "entrypoint": "SKILL.md",
   "agent_count": 35,
   "command_count": 6,
-  "template_count": 9,
+  "template_count": 10,
   "contract_count": 10,
-  "reference_count": 6,
+  "reference_count": 7,
   "workflow_spine": [
     "runtime-capability-preflight",
     "protocol-context-locker",
@@ -14,12 +14,15 @@
     "source-corpus-lock",
     "life-science-lead-scientist",
     "scenario-playbook-router",
+    "execution-strategy-lock",
+    "team-level-selective-dag",
     "specialist-lanes",
     "central-claim-ledger-evidence-graph",
     "workflow-run-state",
     "biomedical-passport-state",
     "stage-evaluation",
     "audit-gates",
+    "selective-spawned-review",
     "claim-level-evidence-verifier",
     "citation-verifier",
     "scientific-writer-citation-agent",
@@ -96,6 +99,15 @@
     "bioagentbench-static-readiness-benchmark-harness-cleanup",
     "source-vs-cache-package-location-reporting-fix"
   ],
+  "new_in_v0_3_4": [
+    "inline-first-hybrid-execution-policy",
+    "selective-spawned-review-lane-policy",
+    "team-level-selective-dag-policy",
+    "nested-spawn-disabled-by-default",
+    "execution-strategy-preflight-fields",
+    "team-spawn-plan-template",
+    "spawned-output-ledger-handoff-requirement"
+  ],
   "agent_roster": [
     "bayesian-decision-modeler",
     "biostats-repro-auditor",
@@ -142,6 +154,7 @@
     "source-corpus-template",
     "hypothesis-tournament-template",
     "stage-evaluation-template",
+    "team-spawn-plan-template",
     "rollback-resume-template"
   ],
   "contracts": [
@@ -162,6 +175,7 @@
     "independent-review-policy",
     "agentic-search-for-biomedical-hypotheses",
     "codex-runtime-capability-matrix",
-    "omics-stage-validation-failure-modes"
+    "omics-stage-validation-failure-modes",
+    "hybrid-execution-policy"
   ]
 }

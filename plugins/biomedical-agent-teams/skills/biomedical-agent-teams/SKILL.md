@@ -9,7 +9,7 @@ description: >
   evidence-audit-team, experiment-design-team, translational-scout-team, and
   omics-team.
 metadata:
-  version: "0.3.2"
+  version: "0.3.4"
   upstream_suite: "biomedical-agent-teams-claude"
   codex_adapter: true
 allowed-tools: Read, Glob, Grep, WebSearch, WebFetch, Bash
@@ -19,11 +19,12 @@ allowed-tools: Read, Glob, Grep, WebSearch, WebFetch, Bash
 
 This is a Codex adapter for the biomedical agent-team suite. In Codex, treat the
 files under `agents/` as scoped role prompts and the files under `commands/` as
-workflow recipes. This v0.3.2 router uses runtime capability preflight,
+workflow recipes. This v0.3.4 router uses runtime capability preflight,
 protocol/context lock, source-corpus lock, workflow-run state, central claim
 ledger, contract-gated role outputs, biomedical passport state, stage
-evaluation, audit gates, writer restriction, independent-review policy, and
-post-write validation before final output.
+evaluation, audit gates, writer restriction, independent-review policy,
+inline-first hybrid execution, selective spawned review, dependency-aware
+team-level spawned workflows, and post-write validation before final output.
 
 ## First Rule
 
@@ -31,6 +32,10 @@ Do not load every agent by default. Select one workflow recipe from `commands/`,
 perform the protocol/context-of-use lock, then read only the specific
 `agents/*.md` files needed for the user's current research question, data type,
 or decision point.
+
+Default execution is lead-controlled and inline-first. Use spawned subagents
+only when they materially improve independence, parallelism, provenance, or
+review quality. Do not spawn every role or every team by default.
 
 For `deep`, `audit`, omics `run`, translational, manuscript-support, or
 long-running work, read `references/contract-gated-workflows.md` before final
@@ -102,6 +107,12 @@ Then produce the workflow preflight contract using these fields:
 9. `file_write_plan`
 10. `stop_criteria`
 11. `checkpoint_plan`
+12. `execution_strategy`
+13. `spawned_review_plan`
+14. `team_spawn_plan`
+15. `all_role_spawn_avoidance_reason`
+16. `nested_spawn_policy`
+17. `post_team_audit_plan`
 
 If this contract is not produced, do not claim the full Biomedical Agent Teams
 protocol was followed. Label the result as a compact or partial workflow.
@@ -139,6 +150,61 @@ inputs checked, methods/tools used, key findings, limitations, handoff, and
 verdict. Use `contracts/role-output.schema.json` as the validator-friendly
 shape when a local artifact is requested.
 
+## Hybrid Execution Strategy
+
+BMAT is not a role-swarm framework. The main assistant remains the lead
+controller for protocol lock, context boundaries, source scope, central claim
+ledger, workflow-run state, and final synthesis. Use
+`references/hybrid-execution-policy.md` and
+`templates/team-spawn-plan-template.md` for deep, audit, omics run,
+translational, manuscript-support, generated-file, long-running, or explicitly
+parallel workflows.
+
+Execution strategies:
+
+- `inline_only`: use for quick answers, narrow standard answers, and tasks where
+  spawned subagents would add coordination overhead without improving review.
+- `inline_first_selective_review`: default professional workflow for standard,
+  deep, and audit work when review independence matters. Run the main workflow
+  inline, then spawn only selected reviewer roles such as
+  `claim-level-evidence-verifier`, `citation-verifier`,
+  `contradiction-red-team`, `biostats-repro-auditor`,
+  `omics-provenance-validator`, or `risk-of-bias-study-quality-auditor`.
+- `team_level_selective_dag`: use when the question has independent decision
+  axes. Spawn selected command-level team bundles such as
+  `idea-discovery-team`, `omics-analysis-team`, and
+  `translational-scout-team` in an initial parallel phase, then spawn
+  dependency-bound teams such as `experiment-design-team` and
+  `evidence-audit-team` only after candidate claims or designs are narrowed.
+- `user_requested_full_spawn`: use only when the user explicitly requests broad
+  spawning after being told it is usually inefficient. Require a budget, a
+  dependency graph, and downgrade reasons if coordination noise weakens review.
+- `blocked`: use when required runtime, safety, privacy, or scope constraints
+  prevent the requested execution pattern.
+
+Nested spawning is disabled by default. A spawned team subagent should run its
+own internal command recipe inline and return one formal team output. It must
+not spawn its own child agents unless the user explicitly authorizes nested
+spawning and the preflight contract records the extra budget, dependency graph,
+privacy boundary, and audit plan.
+
+By mode:
+
+| Mode | Default execution strategy | Spawn budget |
+|---|---|---|
+| `quick` | `inline_only` | 0 |
+| `standard` | `inline_only` or `inline_first_selective_review` | 0-1 selected reviewer or team |
+| `deep` | `inline_first_selective_review` or `team_level_selective_dag` | 1-3 selected spawned outputs |
+| `audit` | `inline_first_selective_review`; add team DAG only for multi-axis audits | 1-4 selected spawned outputs |
+| omics `plan` | `inline_only` unless feasibility axes are independent | 0-1 selected team |
+| omics `run` | `inline_first_selective_review`; add team DAG only after S1-S3 locks | 1-3 selected spawned outputs |
+
+All spawned reviewers and teams must return a formal output with objective,
+scope, inputs checked, methods/tools used, key findings, contradictions, risks,
+confidence, files changed or `none`, checks run or skipped, and recommended
+handoff. The main lead must map accepted findings back to the central claim
+ledger before final writing.
+
 ## Default Workflow Spine
 
 Apply this spine unless a command recipe narrows it further:
@@ -155,32 +221,45 @@ Apply this spine unless a command recipe narrows it further:
    status, and claim use before final wording.
 5. `life-science-lead-scientist` plus `scenario-playbook-router`: task graph,
    playbook, selected specialist lanes, and output path/worktree assumptions.
-6. Specialist lanes: use only the lanes needed for the request.
-7. `central-claim-ledger-evidence-graph`: maintain atomic claims, evidence
+6. Execution strategy lock: choose `inline_only`,
+   `inline_first_selective_review`, `team_level_selective_dag`,
+   `user_requested_full_spawn`, or `blocked`; record spawned reviewer/team
+   budgets, nested-spawn policy, and all-role spawn avoidance reason.
+7. Team-level selective DAG, if chosen: run dependency-aware command-level team
+   bundles after the lead lock and before final ledger synthesis. Phase 1
+   teams may run independently; Phase 2 teams must wait for narrowed candidate
+   claims or designs. Nested spawning remains disabled unless explicitly
+   authorized.
+8. Specialist lanes: use only the lanes needed for the request.
+9. `central-claim-ledger-evidence-graph`: maintain atomic claims, evidence
    links, uncertainty, contradictions, and audit status throughout the workflow.
-8. Workflow-run state and biomedical passport: for
+10. Workflow-run state and biomedical passport: for
    deep/audit/omics-run/translational/manuscript/generated-file or long-running
    work, maintain a compact state record using
    `templates/workflow-run-template.md` and
    `templates/biomedical-passport-template.md` or the same field order.
-9. Stage evaluation: for omics run/audit, generated-file, or long-running work,
+11. Stage evaluation: for omics run/audit, generated-file, or long-running work,
    evaluate S1 Plan, S2 Setup, S3 Validate, S4 Inference/Synthesis, and S5
    Submit/Report. If S3 Validate does not pass, S4/S5 claims must be blocked,
    downgraded, or labeled exploratory/not assessable.
-10. Audit gates: claim boundary, causal/confounder, biostats/reproducibility,
+12. Audit gates: claim boundary, causal/confounder, biostats/reproducibility,
    provenance, risk-of-bias/study quality, safety/ethics/privacy/dual-use,
    contradiction red-team, and uncertainty/evidence-to-decision.
-11. Pre-synthesis claim and citation verification.
-12. `scientific-writer-citation-agent`: write only from verified claim-ledger
+13. Selective spawned review, if chosen: spawn only reviewer lanes that improve
+   independence after ledger claims exist; collect formal outputs, block bare
+   "done" reports, and merge accepted reviewer findings into the central claim
+   ledger.
+14. Pre-synthesis claim and citation verification.
+15. `scientific-writer-citation-agent`: write only from verified claim-ledger
    material.
-13. Independent-review policy: do not call validation independent unless a
+16. Independent-review policy: do not call validation independent unless a
    separate spawned subagent, separate model, tool-backed validator, external
    verifier, or human reviewer was actually used. Same-model separate-pass
    validation must be labeled as such and may require workflow downgrade.
-14. `post-write-final-validator`: block unsupported claims, citation mismatch,
+17. `post-write-final-validator`: block unsupported claims, citation mismatch,
    missing uncertainty, provenance gaps, unsafe advice, and claim-strength
    inflation.
-15. Final output plus claim-strength verdict, workflow-run state, downgrade
+18. Final output plus claim-strength verdict, workflow-run state, downgrade
    reasons, and audit bundle summary.
 
 Use the full spine for `deep`, `audit`, translational, clinical, privacy-sensitive,
@@ -357,8 +436,9 @@ End every Biomedical Agent Teams workflow with one workflow label:
 
 Also list formal role outputs produced, role prompts read but not formalized,
 required gates skipped with reason, runtime capabilities used, source corpus
-status, independent-review status, and tool calls used. If skipped gates prevent
-full protocol compliance, downgrade the workflow label.
+status, execution strategy, spawned reviewers or spawned teams used,
+independent-review status, and tool calls used. If skipped gates prevent full
+protocol compliance, downgrade the workflow label.
 
 For audit-bundle final outputs, include workflow-run state, biomedical passport
 status, stage evaluation when relevant, and integrity-gate verdict. For compact
@@ -524,6 +604,8 @@ reproduction scripts, scoring scripts, Dockerfiles, or result archives:
 - `templates/stage-evaluation-template.md`: S1-S5 workflow validation table.
 - `templates/biomedical-passport-template.md`: concise state/resume template.
 - `templates/integrity-gate-template.md`: failure-mode release gate.
+- `templates/team-spawn-plan-template.md`: selective spawned review and
+  team-level dependency DAG plan.
 - `templates/rollback-resume-template.md`: durable artifact and resume convention.
 - `references/contract-gated-workflows.md`: when and how to use contracts.
 - `references/biomedical-failure-modes.md`: BMAT-specific block/warn taxonomy.
@@ -531,3 +613,5 @@ reproduction scripts, scoring scripts, Dockerfiles, or result archives:
 - `references/agentic-search-for-biomedical-hypotheses.md`: biomedical hypothesis tournament guardrails.
 - `references/codex-runtime-capability-matrix.md`: Codex capability mapping and downgrade rules.
 - `references/omics-stage-validation-failure-modes.md`: S1-S5 omics validation block conditions.
+- `references/hybrid-execution-policy.md`: inline-first execution, selective
+  spawned review, and team-level spawned subagent DAG policy.

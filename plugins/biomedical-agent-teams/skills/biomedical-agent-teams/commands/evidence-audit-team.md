@@ -18,8 +18,21 @@ compact preflight contract with:
 `requested_alias`, `selected_mode`, `deliverable_type`, `evidence_scope`,
 `risk_class`, `required_role_outputs`, `skipped_role_outputs_with_reason`,
 `external_tools_allowed`, `file_write_plan`, `stop_criteria`, and
-`checkpoint_plan`. If runtime capability preflight or this contract is absent,
+`checkpoint_plan`. For v0.3.4, also record `execution_strategy`,
+`spawned_review_plan`, `team_spawn_plan`,
+`all_role_spawn_avoidance_reason`, `nested_spawn_policy`, and
+`post_team_audit_plan`. If runtime capability preflight or this contract is absent,
 label the result as a compact or partial workflow rather than a full audit.
+
+## Spawned Team Bundle Policy
+
+This recipe may run as a selected team-level spawned subagent when the main BMAT
+lead needs an independent defensibility audit. If spawned, run the internal
+roles inline, do not spawn child agents unless `nested_spawn_policy` explicitly
+allows it, and return one formal evidence-audit team report. The report must
+include audited claim IDs, source/provenance/statistical checks, contradiction
+findings, confidence, files changed or `none`, checks run or skipped, and a
+handoff for the main lead to merge into the central claim ledger.
 
 ## Team
 
@@ -57,6 +70,8 @@ label the result as a compact or partial workflow rather than a full audit.
 14. Apply `references/independent-review-policy.md`; do not call same-model validation independent.
 15. Produce safer rewritten claims only from verified ledger material.
 16. Run the integrity gate and `post-write-final-validator` on the rewritten/audited final text.
+17. If this was a spawned team output, provide `spawned_team_output_status`,
+    `nested_spawn_used`, and `ledger_handoff_claim_ids` before final wording.
 
 ## Audit Scope
 
@@ -88,4 +103,5 @@ otherwise state that no safety auditor trigger was present.
 13. workflow-run state, biomedical passport status, and integrity-gate failure-mode checklist status
 14. unresolved checks
 15. recommended next evidence needed
-16. final workflow label and skipped gates with reasons
+16. spawned team output status and ledger handoff if this recipe was spawned
+17. final workflow label and skipped gates with reasons

@@ -46,13 +46,23 @@ class BmatPackageTest(unittest.TestCase):
 
     def test_version_files_are_aligned(self):
         version = (SKILL_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+        plugin = load_json(ROOT / "plugins" / "biomedical-agent-teams" / ".codex-plugin" / "plugin.json")
         manifest = load_json(SKILL_ROOT / "manifest.json")
         source_manifest = load_json(SKILL_ROOT / "source-manifest.json")
         skill_text = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        workflow_template = (SKILL_ROOT / "templates" / "workflow-run-template.md").read_text(
+            encoding="utf-8"
+        )
+        passport_template = (SKILL_ROOT / "templates" / "biomedical-passport-template.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(plugin["version"], version)
         self.assertEqual(manifest["version"], version)
         self.assertEqual(manifest["adapter_version"], version)
         self.assertEqual(source_manifest["version"], version)
         self.assertIn(f'version: "{version}"', skill_text)
+        self.assertIn(f"| plugin_version | {version} |", workflow_template)
+        self.assertIn(f"| workflow_version | {version} |", passport_template)
 
     def test_router_aliases_match_source_manifest_commands(self):
         source_manifest = load_json(SKILL_ROOT / "source-manifest.json")
@@ -96,12 +106,139 @@ class BmatPackageTest(unittest.TestCase):
             self.assertIn("scoring scripts", text)
             self.assertIn("Dockerfiles", text)
 
+    def test_v034_hybrid_execution_policy_is_present(self):
+        skill_text = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("inline_first_selective_review", skill_text)
+        self.assertIn("team_level_selective_dag", skill_text)
+        self.assertIn("Nested spawning is disabled by default", skill_text)
+        self.assertTrue((SKILL_ROOT / "references" / "hybrid-execution-policy.md").exists())
+        self.assertTrue((SKILL_ROOT / "templates" / "team-spawn-plan-template.md").exists())
+
+        council_text = (SKILL_ROOT / "commands" / "biomedical-research-council.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("Hybrid Execution Policy", council_text)
+        self.assertIn("team_level_selective_dag", council_text)
+
+        for command in (SKILL_ROOT / "commands").glob("*.md"):
+            text = command.read_text(encoding="utf-8")
+            with self.subTest(command=command.name):
+                self.assertIn("execution_strategy", text)
+                self.assertIn("nested_spawn_policy", text)
+
+    def test_v034_hybrid_spine_order_separates_team_dag_from_review(self):
+        source_manifest = load_json(SKILL_ROOT / "source-manifest.json")
+        spine = source_manifest["workflow_spine"]
+        self.assertLess(
+            spine.index("execution-strategy-lock"),
+            spine.index("team-level-selective-dag"),
+        )
+        self.assertLess(
+            spine.index("team-level-selective-dag"),
+            spine.index("central-claim-ledger-evidence-graph"),
+        )
+        self.assertLess(
+            spine.index("audit-gates"),
+            spine.index("selective-spawned-review"),
+        )
+        self.assertLess(
+            spine.index("selective-spawned-review"),
+            spine.index("claim-level-evidence-verifier"),
+        )
+
+        workflow_template = (SKILL_ROOT / "templates" / "workflow-run-template.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("| team_spawn_outputs |", workflow_template)
+        self.assertIn("| selective_review_outputs |", workflow_template)
+        self.assertIn("selective_review_outputs when used", workflow_template)
+
     @unittest.skipUnless(importlib.util.find_spec("jsonschema"), "jsonschema is not installed")
     def test_v03_schema_samples_validate(self):
         from jsonschema import Draft202012Validator
 
         version = (SKILL_ROOT / "VERSION").read_text(encoding="utf-8").strip()
         samples = {
+            "biomedical-passport.schema.json": {
+                "passport_id": "BP-20260610-001",
+                "workflow_alias": "biomedical-research-council",
+                "workflow_version": version,
+                "created_at": "2026-06-10",
+                "updated_at": "2026-06-10",
+                "context_lock": {"question": "audit BMAT package"},
+                "normalized_entities": [],
+                "source_corpus": [],
+                "workflow_run": {"run_id": "BMAT-RUN-20260610-001"},
+                "stage_evaluation": {"overall_verdict": "pass"},
+                "claim_ledger": {
+                    "location_or_summary": "inline smoke sample",
+                    "status": "pass",
+                },
+                "gate_status": [
+                    {
+                        "gate": "claim ledger",
+                        "status": "pass",
+                        "reason": "sample validates schema shape",
+                    }
+                ],
+                "outputs": [],
+                "resume_state": {
+                    "current_stage": "complete",
+                    "next_action": "none",
+                    "open_questions": [],
+                },
+            },
+            "preflight-contract.schema.json": {
+                "runtime_capability_preflight_id": "RCP-20260610-001",
+                "requested_alias": "biomedical-research-council",
+                "selected_mode": "deep",
+                "deliverable_type": "audit bundle",
+                "evidence_scope": {
+                    "source_types": ["PMID", "GEO"],
+                    "species_or_model": "human",
+                    "date_or_version_needs": "retrieval date required",
+                },
+                "risk_class": "moderate",
+                "required_role_outputs": ["claim-level-evidence-verifier"],
+                "skipped_role_outputs_with_reason": [],
+                "external_tools_allowed": {
+                    "allowed": True,
+                    "limits": "public sources only",
+                },
+                "file_write_plan": {
+                    "will_write_files": False,
+                    "allowed_paths": [],
+                },
+                "stop_criteria": ["missing source corpus"],
+                "checkpoint_plan": [
+                    {
+                        "checkpoint": "ledger built",
+                        "required_before": "final writing",
+                    }
+                ],
+                "execution_strategy": "inline_first_selective_review",
+                "spawned_review_plan": {
+                    "allowed": True,
+                    "budget": 1,
+                    "selected_roles": ["claim-level-evidence-verifier"],
+                    "rationale": "independent claim audit",
+                },
+                "team_spawn_plan": {
+                    "allowed": False,
+                    "budget": 0,
+                    "selected_teams": [],
+                    "dependency_graph": [],
+                    "nested_spawn_allowed": False,
+                    "rationale": "single-axis audit",
+                },
+                "all_role_spawn_avoidance_reason": "role swarm adds coordination overhead",
+                "nested_spawn_policy": {
+                    "allowed": False,
+                    "authorization": "not requested",
+                    "limits": "spawned reviewers only",
+                },
+                "post_team_audit_plan": "merge accepted review findings into the central claim ledger",
+            },
             "runtime-capability-preflight.schema.json": {
                 "runtime_id": "RCP-20260609-001",
                 "codex_client": "Codex Desktop",
@@ -124,6 +261,17 @@ class BmatPackageTest(unittest.TestCase):
                 "alias": "omics-analysis-team",
                 "mode": "run",
                 "plugin_version": version,
+                "execution_strategy": "inline_first_selective_review",
+                "nested_spawn_allowed": False,
+                "spawned_review_lanes": [
+                    {
+                        "role": "omics-provenance-validator",
+                        "status": "planned",
+                        "rationale": "review run provenance",
+                        "ledger_handoff": "pending",
+                    }
+                ],
+                "team_spawn_lanes": [],
                 "stages": [
                     {
                         "id": "runtime_capability_preflight",
@@ -177,6 +325,53 @@ class BmatPackageTest(unittest.TestCase):
                     }
                 ],
             },
+            "omics-run-manifest.schema.json": {
+                "analysis_id": "OMICS-20260610-001",
+                "track": "bulk",
+                "data_sources": [{"source_id": "local-smoke"}],
+                "sample_sheet": "not-applicable",
+                "genome_build": "not-applicable",
+                "biological_unit": "sample",
+                "contrast_or_endpoint": "not-applicable",
+                "software_versions": ["python"],
+                "qc_decisions": ["schema smoke only"],
+                "statistical_plan": "not-applicable",
+                "stage_evaluation": {"S1": "pass"},
+                "generated_artifacts": [],
+                "review_status": {
+                    "code_review": "pass",
+                    "provenance_review": "pass",
+                    "biostats_review": "not-applicable",
+                },
+            },
+            "post-write-validation.schema.json": {
+                "final_validator_verdict": "pass",
+                "unsupported_final_claims": [],
+                "citation_or_provenance_mismatches": [],
+                "missing_uncertainty_or_limitations": [],
+                "safety_ethics_privacy_issues": [],
+                "failure_mode_checklist": [
+                    {
+                        "failure_mode": "self-ratification",
+                        "status": "not-applicable",
+                        "reason": "schema smoke sample",
+                    }
+                ],
+                "excluded_claim_handling": "none",
+                "independent_review_status": "not-applicable",
+                "minimal_required_corrections": [],
+                "release_ready_claim_strength": "low",
+            },
+            "role-output.schema.json": {
+                "role": "claim-level-evidence-verifier",
+                "task_scope": "schema smoke sample",
+                "inputs_checked": ["none"],
+                "methods_or_tools_used": ["jsonschema"],
+                "key_findings": ["sample validates schema shape"],
+                "limitations": ["not a real audit"],
+                "handoff": {"claim_ids": []},
+                "verdict": "pass",
+            },
             "stage-evaluation.schema.json": {
                 "evaluation_id": "SE-20260609-001",
                 "workflow_alias": "omics-analysis-team",
@@ -192,6 +387,11 @@ class BmatPackageTest(unittest.TestCase):
                 "overall_verdict": "pass",
             },
         }
+
+        self.assertEqual(
+            set(samples),
+            {path.name for path in (SKILL_ROOT / "contracts").glob("*.schema.json")},
+        )
 
         for filename, sample in samples.items():
             with self.subTest(schema=filename):

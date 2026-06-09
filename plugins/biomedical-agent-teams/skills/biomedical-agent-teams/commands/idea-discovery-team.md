@@ -18,9 +18,23 @@ compact preflight contract with:
 `requested_alias`, `selected_mode`, `deliverable_type`, `evidence_scope`,
 `risk_class`, `required_role_outputs`, `skipped_role_outputs_with_reason`,
 `external_tools_allowed`, `file_write_plan`, `stop_criteria`, and
-`checkpoint_plan`. If runtime capability preflight or this contract is absent,
+`checkpoint_plan`. For v0.3.4, also record `execution_strategy`,
+`spawned_review_plan`, `team_spawn_plan`,
+`all_role_spawn_avoidance_reason`, `nested_spawn_policy`, and
+`post_team_audit_plan`. If runtime capability preflight or this contract is absent,
 label the result as a compact or partial workflow rather than a full
 idea-discovery audit.
+
+## Spawned Team Bundle Policy
+
+This recipe may run as a selected team-level spawned subagent in the first
+parallel phase of a broad BMAT decision workflow. If spawned, run the internal
+roles inline, do not spawn child agents unless `nested_spawn_policy` explicitly
+allows it, and return one formal idea-discovery team report. The report must
+include candidate hypotheses, duplicate collapse, ranking criteria, red-team
+downgrades, expected-information-gain logic, useful excluded ideas, confidence,
+files changed or `none`, checks run or skipped, and a handoff to the central
+claim ledger.
 
 ## Use These Agents When Useful
 
@@ -67,6 +81,8 @@ idea-discovery audit.
 15. Apply `references/independent-review-policy.md` before describing validation as independent.
 16. The writer can use only verified ledger material; run `post-write-final-validator` before final output.
 17. Do not fabricate PMIDs, DOIs, accessions, reagent details, trial status, or public database records.
+18. If this was a spawned team output, provide `spawned_team_output_status`,
+    `nested_spawn_used`, and `ledger_handoff_claim_ids` before final ranking.
 
 ## Hypothesis Tournament Loop
 
@@ -120,4 +136,5 @@ or not-ledger-verified claims rather than adding them to the final narrative.
 16. post-write validation verdict
 17. workflow-run state, biomedical passport, and integrity-gate status
 18. final claim-strength verdict
-19. final workflow label and skipped gates with reasons
+19. spawned team output status and ledger handoff if this recipe was spawned
+20. final workflow label and skipped gates with reasons

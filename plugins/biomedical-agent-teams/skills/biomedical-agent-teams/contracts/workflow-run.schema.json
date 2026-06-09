@@ -8,6 +8,10 @@
     "alias",
     "mode",
     "plugin_version",
+    "execution_strategy",
+    "nested_spawn_allowed",
+    "spawned_review_lanes",
+    "team_spawn_lanes",
     "stages",
     "final_label",
     "downgrade_reasons"
@@ -20,6 +24,56 @@
       "enum": ["quick", "standard", "deep", "audit", "plan", "run"]
     },
     "plugin_version": { "type": "string" },
+    "execution_strategy": {
+      "type": "string",
+      "enum": [
+        "inline_only",
+        "inline_first_selective_review",
+        "team_level_selective_dag",
+        "user_requested_full_spawn",
+        "blocked"
+      ]
+    },
+    "nested_spawn_allowed": { "type": "boolean" },
+    "spawned_review_lanes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "status", "rationale", "ledger_handoff"],
+        "properties": {
+          "role": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["planned", "running", "complete", "skipped", "blocked"]
+          },
+          "rationale": { "type": "string" },
+          "ledger_handoff": { "type": "string" }
+        }
+      }
+    },
+    "team_spawn_lanes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["team", "phase", "depends_on", "status", "nested_spawn_used", "ledger_handoff"],
+        "properties": {
+          "team": { "type": "string" },
+          "phase": { "type": "integer", "minimum": 0 },
+          "depends_on": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["planned", "running", "complete", "skipped", "blocked"]
+          },
+          "nested_spawn_used": { "type": "boolean" },
+          "ledger_handoff": { "type": "string" }
+        }
+      }
+    },
     "stages": {
       "type": "array",
       "minItems": 1,

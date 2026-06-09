@@ -14,7 +14,13 @@
     "external_tools_allowed",
     "file_write_plan",
     "stop_criteria",
-    "checkpoint_plan"
+    "checkpoint_plan",
+    "execution_strategy",
+    "spawned_review_plan",
+    "team_spawn_plan",
+    "all_role_spawn_avoidance_reason",
+    "nested_spawn_policy",
+    "post_team_audit_plan"
   ],
   "properties": {
     "runtime_capability_preflight_id": {
@@ -103,6 +109,95 @@
           "required_before": { "type": "string" }
         }
       }
+    },
+    "execution_strategy": {
+      "type": "string",
+      "enum": [
+        "inline_only",
+        "inline_first_selective_review",
+        "team_level_selective_dag",
+        "user_requested_full_spawn",
+        "blocked"
+      ]
+    },
+    "spawned_review_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed", "budget", "selected_roles", "rationale"],
+      "properties": {
+        "allowed": { "type": "boolean" },
+        "budget": { "type": "integer", "minimum": 0 },
+        "selected_roles": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "rationale": { "type": "string" }
+      }
+    },
+    "team_spawn_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed",
+        "budget",
+        "selected_teams",
+        "dependency_graph",
+        "nested_spawn_allowed",
+        "rationale"
+      ],
+      "properties": {
+        "allowed": { "type": "boolean" },
+        "budget": { "type": "integer", "minimum": 0 },
+        "selected_teams": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "biomedical-research-council",
+              "idea-discovery-team",
+              "omics-analysis-team",
+              "evidence-audit-team",
+              "experiment-design-team",
+              "translational-scout-team"
+            ]
+          }
+        },
+        "dependency_graph": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["team", "phase", "depends_on", "purpose"],
+            "properties": {
+              "team": { "type": "string" },
+              "phase": { "type": "integer", "minimum": 0 },
+              "depends_on": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "purpose": { "type": "string" }
+            }
+          }
+        },
+        "nested_spawn_allowed": { "type": "boolean" },
+        "rationale": { "type": "string" }
+      }
+    },
+    "all_role_spawn_avoidance_reason": {
+      "type": "string"
+    },
+    "nested_spawn_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed", "authorization", "limits"],
+      "properties": {
+        "allowed": { "type": "boolean" },
+        "authorization": { "type": "string" },
+        "limits": { "type": "string" }
+      }
+    },
+    "post_team_audit_plan": {
+      "type": "string"
     },
     "source_corpus_id": {
       "type": "string"
