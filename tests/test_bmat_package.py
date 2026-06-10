@@ -153,6 +153,17 @@ class BmatPackageTest(unittest.TestCase):
         self.assertIn("| selective_review_outputs |", workflow_template)
         self.assertIn("selective_review_outputs when used", workflow_template)
 
+    def test_readme_workflow_structure_matches_v034_hybrid_model(self):
+        for readme in (ROOT / "README.md", ROOT / "plugins" / "biomedical-agent-teams" / "README.md"):
+            text = readme.read_text(encoding="utf-8")
+            with self.subTest(readme=readme.relative_to(ROOT)):
+                self.assertIn("accTitle: BMAT Hybrid Workflow Structure", text)
+                self.assertIn("lead_controlled_inline_spine", text)
+                self.assertIn("team_level_spawned_dag", text)
+                self.assertIn("selective_spawned_review", text)
+                self.assertIn("team_level_selective_dag", text)
+                self.assertIn("Nested spawning is disabled by default", text)
+
     @unittest.skipUnless(importlib.util.find_spec("jsonschema"), "jsonschema is not installed")
     def test_v03_schema_samples_validate(self):
         from jsonschema import Draft202012Validator

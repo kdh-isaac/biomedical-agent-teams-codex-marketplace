@@ -23,33 +23,59 @@ workflow DAGs, and integrity-gate resources.
 
 ```mermaid
 flowchart TD
-    A["User request or BMAT alias"] --> B["Runtime capability preflight"]
-    B --> C["Protocol and context lock"]
-    C --> D["Source corpus lock"]
-    D --> E["Select workflow recipe"]
-    E --> Q["Lock execution strategy"]
-    Q --> F{"Mode"}
-    F -->|"quick"| G["Lead answer with minimal evidence checks"]
-    F -->|"standard"| H["Specialist lanes plus claim ledger"]
-    F -->|"deep or audit"| I["Specialist lanes plus workflow-run state"]
-    Q --> R{"Hybrid needed?"}
-    R -->|"selected review"| S["Spawn selected reviewer lanes"]
-    R -->|"team DAG"| T["Spawn selected team bundles"]
-    S --> U["Ledger handoff"]
-    T --> U
-    U --> M
-    I --> J["Biomedical passport"]
-    I --> K["Stage S1-S5 evaluation"]
-    I --> L["Independent review policy"]
-    G --> M["Writer restricted to verified claims"]
-    H --> M
-    J --> M
-    K --> M
-    L --> M
-    M --> N["Post-write final validation"]
-    N --> O["Final workflow label and skipped-gate reasons"]
-    O --> P["Compact final or audit-bundle final"]
+    accTitle: BMAT Hybrid Workflow Structure
+    accDescr: Lead-controlled BMAT workflow showing the inline spine, optional team-level spawned DAG before final ledger synthesis, and optional selective spawned review after audit gates.
+
+    subgraph lead_controlled_inline_spine["Lead-controlled inline spine"]
+        user_request["User request or BMAT alias"]
+        runtime_preflight["Runtime capability preflight"]
+        protocol_lock["Protocol and context lock"]
+        entity_normalization["Entity normalization"]
+        source_corpus_lock["Source corpus lock"]
+        playbook_route["Lead scientist and playbook router"]
+        strategy_lock{"Execution strategy lock"}
+        inline_lanes["Selected specialist lanes inline"]
+        claim_ledger["Central claim ledger and evidence graph"]
+        workflow_state["Workflow-run state and biomedical passport"]
+        stage_evaluation["Stage S1-S5 evaluation when applicable"]
+        audit_gates["Audit gates"]
+        claim_citation_check["Pre-synthesis claim and citation verification"]
+        ledger_only_writer["Ledger-only scientific writer"]
+        post_write_validator["Post-write final validator"]
+        final_output["Final label, downgrade reasons, and audit summary"]
+    end
+
+    subgraph team_level_spawned_dag["Optional team-level spawned subagent DAG"]
+        phase_zero["Phase 0: main lead locks scope and team graph"]
+        phase_one["Phase 1: idea, omics, translational teams"]
+        phase_two["Phase 2: experiment design and evidence audit teams"]
+        team_handoff["Formal team outputs and ledger handoff"]
+    end
+
+    subgraph selective_spawned_review["Optional selective spawned review"]
+        review_decision{"Independent review needed?"}
+        reviewer_lanes["Claim, citation, stats, provenance, contradiction, bias reviewers"]
+        reviewer_handoff["Accepted findings merged into ledger"]
+    end
+
+    user_request --> runtime_preflight --> protocol_lock --> entity_normalization
+    entity_normalization --> source_corpus_lock --> playbook_route --> strategy_lock
+    strategy_lock -->|"inline_only or inline_first_selective_review"| inline_lanes
+    strategy_lock -->|"team_level_selective_dag"| phase_zero
+    strategy_lock -->|"blocked"| final_output
+    phase_zero --> phase_one --> phase_two --> team_handoff --> claim_ledger
+    inline_lanes --> claim_ledger
+    claim_ledger --> workflow_state --> stage_evaluation --> audit_gates
+    audit_gates --> review_decision
+    review_decision -->|"yes"| reviewer_lanes --> reviewer_handoff --> claim_citation_check
+    review_decision -->|"no"| claim_citation_check
+    claim_citation_check --> ledger_only_writer --> post_write_validator --> final_output
 ```
+
+The main lead owns the protocol lock, source scope, central claim ledger,
+workflow-run state, and final synthesis. Team-level spawned subagents are used
+only for separable decision axes; selective spawned reviewers are used only
+after ledger claims exist. Nested spawning is disabled by default.
 
 For BioAgentBench-style tasks, the benchmark protocol is locked before solving.
 Truth files, result archives, scoring scripts, reproduction scripts, and task
