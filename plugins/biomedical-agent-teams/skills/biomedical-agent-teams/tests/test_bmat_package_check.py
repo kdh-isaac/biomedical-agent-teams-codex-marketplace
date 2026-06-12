@@ -1,0 +1,91 @@
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+
+SKILL_ROOT = Path(__file__).resolve().parents[1]
+PLUGIN_ROOT = SKILL_ROOT.parents[1]
+PACKAGE_CHECK = SKILL_ROOT / "scripts" / "bmat_package_check.py"
+PLUGIN_JSON = PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
+ROUTER_ROOT_GUARD_PHRASE = (
+    "Resolve every command recipe path relative to the directory containing this `SKILL.md`"
+)
+
+
+def run_package_check(root: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(PACKAGE_CHECK), "--root", str(root)],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+
+def copy_plugin(tmp_path: Path) -> Path:
+    target = tmp_path / "biomedical-agent-teams"
+    ignore = shutil.ignore_patterns("__pycache__", ".pytest_cache")
+    shutil.copytree(PLUGIN_ROOT, target, ignore=ignore)
+    return target
+
+
+def test_current_plugin_default_prompts_fit_codex_limit() -> None:
+    payload = json.loads(PLUGIN_JSON.read_text(encoding="utf-8"))
+    default_prompts = payload.get("interface", {}).get("defaultPrompt", [])
+
+    assert isinstance(default_prompts, list)
+    assert len(default_prompts) <= 3
+
+
+def test_current_package_check_passes() -> None:
+    result = run_package_check(PLUGIN_ROOT)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_package_check_flags_plugin_default_prompt_limit(tmp_path: Path) -> None:
+    plugin_root = copy_plugin(tmp_path)
+    plugin_json = plugin_root / ".codex-plugin" / "plugin.json"
+    payload = json.loads(plugin_json.read_text(encoding="utf-8"))
+    payload.setdefault("interface", {})["defaultPrompt"] = [
+        "biomedical-research-council smoke prompt",
+        "omics-analysis-team smoke prompt",
+        "evidence-audit-team smoke prompt",
+        "experiment-design-team excess prompt",
+    ]
+    plugin_json.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    result = run_package_check(plugin_root)
+
+    assert result.returncode == 1
+    assert "DEFAULT_PROMPT_LIMIT_EXCEEDED" in result.stdout
+
+
+def test_package_check_flags_missing_skill_root_relative_router_guard(tmp_path: Path) -> None:
+    plugin_root = copy_plugin(tmp_path)
+    skill_path = plugin_root / "skills" / "biomedical-agent-teams" / "SKILL.md"
+    text = skill_path.read_text(encoding="utf-8")
+    skill_path.write_text(text.replace(ROUTER_ROOT_GUARD_PHRASE, ""), encoding="utf-8")
+
+    result = run_package_check(plugin_root)
+
+    assert result.returncode == 1
+    assert "ROUTER_ROOT_GUARD_MISSING" in result.stdout
+
+
+def test_package_check_flags_source_manifest_missing_actual_command(tmp_path: Path) -> None:
+    plugin_root = copy_plugin(tmp_path)
+    source_manifest_path = plugin_root / "skills" / "biomedical-agent-teams" / "source-manifest.json"
+    source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
+    source_manifest["commands"] = [
+        command for command in source_manifest["commands"] if command != "omics-analysis-team"
+    ]
+    source_manifest_path.write_text(json.dumps(source_manifest, indent=2), encoding="utf-8")
+
+    result = run_package_check(plugin_root)
+
+    assert result.returncode == 1
+    assert "SOURCE_MANIFEST_SET_MISMATCH" in result.stdout

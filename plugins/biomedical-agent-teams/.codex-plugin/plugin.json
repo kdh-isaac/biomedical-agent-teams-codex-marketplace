@@ -1,6 +1,6 @@
 {
   "name": "biomedical-agent-teams",
-  "version": "0.4.3",
+  "version": "0.4.7",
   "description": "Codex-native biomedical audit and loop-engineering workflow router for life-science research, hypothesis validation, literature and public-omics evidence synthesis, claim-level verification, statistical audit, experiment design, translational scouting, scientific writing support, recurring loop state, connector binding, and validator-backed artifact checks.",
   "author": {
     "name": "Donghyun Kim Local Research Workflow"
@@ -23,8 +23,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Biomedical Agent Teams",
-    "shortDescription": "Lead-controlled biomedical audit workflow with stricter omics reviewer spawning, loop state, connector binding, hybrid execution, claim ledgers, passports, and artifact validation.",
-    "longDescription": "A Codex-native biomedical audit and loop-engineering workflow suite for structured life-science research. It locks context of use, requires command-level preflight contracts, normalizes biomedical entities, coordinates specialist lanes for hypothesis discovery, literature retrieval, public omics analysis, mechanism and causal reasoning, experiment design, clinical/regulatory/IP scouting, recurring literature or omics watch loops, claim-audit inboxes, and hypothesis triage, and routes all claims through a fixed-field central claim ledger, contract-shaped role outputs, loop state, biomedical passport state, audit gates, citation verification, ledger-only writing, excluded-claim tracking, connector binding rules, integrity-gate failure-mode checks, inline-first hybrid execution, stricter omics reviewer-spawn floors, selective spawned reviewer lanes, dependency-aware team-level spawned workflows with explicit team output artifacts, post-write validation, and optional validator-backed artifact checks.",
+    "shortDescription": "Lead-controlled biomedical audit workflow with omics-team routing, code-reviewer gates, package checks, loop state, hybrid execution, claim ledgers, and artifact validation.",
+    "longDescription": "A Codex-native biomedical audit and loop-engineering workflow suite for structured life-science research. It locks context of use, requires command-level preflight contracts, normalizes biomedical entities, coordinates specialist lanes for hypothesis discovery, literature retrieval, public omics analysis, mechanism and causal reasoning, experiment design, clinical/regulatory/IP scouting, recurring literature or omics watch loops, claim-audit inboxes, and hypothesis triage, and routes all claims through a fixed-field central claim ledger, contract-shaped role outputs, loop state, biomedical passport state, audit gates, citation verification, ledger-only writing, excluded-claim tracking, connector binding rules, integrity-gate failure-mode checks, inline-first hybrid execution, omics-analysis-team routing for substantive omics work, stricter omics reviewer-spawn floors, code-reviewer defaults for code-bearing omics runs, selective spawned reviewer lanes, dependency-aware team-level spawned workflows with explicit team output artifacts, post-write validation, package inventory checks, handoff/pickup templates, and optional validator-backed artifact checks.",
     "developerName": "Donghyun Kim Local Research Workflow",
     "category": "Research",
     "capabilities": [
@@ -35,10 +35,7 @@
     "defaultPrompt": [
       "biomedical-research-council TET2 KO plus IL-21 armored CAR-T persistence hypothesis",
       "omics-analysis-team find public datasets to test IL-21-STAT3-FOXO1 stem-like memory signatures",
-      "omics-analysis-team TCGA survival analysis for DUSP5 high versus low in CD3-high solid tumors --track survival --mode plan",
-      "experiment-design-team validate whether IL-21-STAT3-FOXO1 supports stem-like CAR-T persistence --mode deep",
-      "evidence-audit-team verify this CAR-T mechanism claim with primary literature and public databases",
-      "translational-scout-team benchmark IL-21 armored CAR-T safety and IP differentiation --mode standard"
+      "evidence-audit-team verify this CAR-T mechanism claim with primary literature and public databases"
     ],
     "brandColor": "#0F766E"
   }

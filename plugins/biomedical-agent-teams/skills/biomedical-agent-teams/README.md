@@ -7,6 +7,48 @@ deterministic artifact validators.
 
 Codex uses `SKILL.md` as the router and treats `agents/*.md` as role prompts.
 
+## v0.4.7 Updates
+
+- Requires `source-manifest.json` resource arrays to exactly match the packaged
+  file sets for commands, agents, contracts, templates, references, loops,
+  scripts, and Codex agent templates.
+- Adds a regression test for the previously missed case where
+  `omics-analysis-team` was absent from the command manifest while the actual
+  command file still existed.
+- Updates metadata and templates to 0.4.7.
+
+## v0.4.6 Updates
+
+- Requires BMAT aliases and command recipes to resolve from the active
+  `SKILL.md` directory so old local working copies cannot shadow the installed
+  cache during workflow smoke tests.
+- Keeps plugin `defaultPrompt` entries within the Codex loader limit of three.
+- Adds package-check coverage for prompt-limit and router-root guard regressions.
+- Updates metadata and templates to 0.4.6.
+
+## v0.4.5 Updates
+
+- Makes `omics-analysis-team` the default routing axis whenever a BMAT request
+  requires substantive omics feasibility, execution, or audit.
+- Requires at least one spawned or tool-backed core omics reviewer after S1-S3
+  locks for omics `run` when runtime support is available, with review running
+  alongside S4/S5 when practical.
+- Makes `omics-code-reviewer` the default required reviewer for code-bearing
+  omics runs.
+- Updates metadata and templates to 0.4.5.
+
+## v0.4.4 Updates
+
+- Adds `scripts/bmat_package_check.py` for package-wide version, resource,
+  registry, router-reference, and manifest-count validation.
+- Adds `scripts/bmat_docs_list.py` to list command, reference, loop, and
+  template resources during routing and release checks.
+- Adds `templates/bmat-handoff-template.md` and
+  `templates/bmat-pickup-template.md` for concise current-state handoff and
+  resume verification.
+- Updates metadata and tests so source tree, active marketplace source, and
+  installed cache can be checked with the same package validator.
+
 ## v0.4.3 Updates
 
 - Makes omics `run` reviewer spawning stricter after S1-S3 locks: select at
@@ -67,7 +109,7 @@ Codex uses `SKILL.md` as the router and treats `agents/*.md` as role prompts.
 
 ```mermaid
 flowchart TD
-    accTitle: BMAT v0.4.3 Workflow Structure
+    accTitle: BMAT v0.4.7 Workflow Structure
     accDescr: Vertical BMAT workflow spine with optional loop, team DAG, and reviewer lanes feeding back into the central ledger.
 
     request["User request or BMAT alias"]

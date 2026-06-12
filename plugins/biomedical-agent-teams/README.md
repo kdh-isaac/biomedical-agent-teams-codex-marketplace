@@ -8,7 +8,7 @@ spawned or tool-backed review.
 
 - `.agents/plugins/marketplace.json`: local marketplace metadata.
 - `skills/biomedical-agent-teams/`: Codex-native biomedical agent-team skill,
-  including 35 agent prompts, 6 workflow recipes, 13 contract schemas, 10
+  including 35 agent prompts, 6 workflow recipes, 13 contract schemas, 12
   templates, 9 references, 4 loop recipes, 11 Codex reviewer-agent templates,
   an agent registry, a fixed-field claim ledger, biomedical passport,
   runtime capability preflight, source corpus lock, workflow-run state, stage
@@ -17,6 +17,51 @@ spawned or tool-backed review.
   integrity-gate resources, loop-state resources, connector binding, Codex
   reviewer-agent templates, team output artifact tracking, and deterministic
   BMAT artifact and loop-state validators.
+
+## v0.4.7 Updates
+
+- Requires `source-manifest.json` resource arrays to exactly match the packaged
+  command, agent, contract, template, reference, loop, script, and Codex agent
+  template file sets.
+- Adds package-check regression coverage for a missing `omics-analysis-team`
+  command manifest entry when the actual command file still exists.
+- Updates package metadata to version 0.4.7.
+
+## v0.4.6 Updates
+
+- Adds a workflow-structure guard requiring command recipes to resolve relative
+  to the active `SKILL.md` directory, preventing stale dated workspace copies
+  from masquerading as the installed BMAT workflow during smoke tests.
+- Limits `interface.defaultPrompt` to the Codex loader maximum of three prompts.
+- Extends `scripts/bmat_package_check.py` so package validation fails on excess
+  default prompts or a missing router root-resolution guard.
+- Updates package metadata to version 0.4.6.
+
+## v0.4.5 Updates
+
+- Routes requests that require substantive omics feasibility assessment,
+  public-cohort execution, code-bearing omics analysis, or omics result audit
+  through `omics-analysis-team` as the primary omics workflow or as the omics
+  axis of a broader team DAG.
+- Strengthens omics `run` governance so at least one spawned or tool-backed
+  core reviewer runs after S1-S3 locks and alongside S4/S5 when practical.
+- Makes `omics-code-reviewer` the default required reviewer for runs that
+  generate, modify, or materially depend on scripts, notebooks, shell commands,
+  statistical code, or workflow configs.
+- Updates package metadata to version 0.4.5.
+
+## v0.4.4 Updates
+
+- Adds `scripts/bmat_package_check.py` to validate package-wide version
+  alignment, manifest counts, source-manifest resources, agent-registry
+  bindings, TOML template versions, and router resource references.
+- Adds `scripts/bmat_docs_list.py` as a compact command/reference/loop/template
+  inventory helper for routing and release review.
+- Adds `templates/bmat-handoff-template.md` and
+  `templates/bmat-pickup-template.md` for resumable BMAT work and source/cache
+  parity handoffs.
+- Expands repository tests so package metadata, resource counts, CLI validators,
+  and current workflow diagrams are checked together before cache updates.
 
 ## v0.4.3 Updates
 
@@ -112,7 +157,7 @@ spawned or tool-backed review.
 
 ```mermaid
 flowchart TD
-    accTitle: BMAT v0.4.3 Workflow Structure
+    accTitle: BMAT v0.4.7 Workflow Structure
     accDescr: Vertical BMAT workflow spine with optional loop, team DAG, and reviewer lanes feeding back into the central ledger.
 
     request["User request or BMAT alias"]

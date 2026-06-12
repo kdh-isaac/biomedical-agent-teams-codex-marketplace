@@ -1,15 +1,11 @@
 ---
 name: biomedical-agent-teams
 description: >
-  Codex-native biomedical agent-team router for life-science research, CAR cell
-  therapy hypotheses, literature and public-omics evidence synthesis,
-  claim-level verification, causal and statistical audit, experiment design,
-  translational scouting, and manuscript or report support. Use for aliases
-  such as biomedical-research-council, idea-discovery-team, omics-analysis-team,
-  evidence-audit-team, experiment-design-team, translational-scout-team, and
-  omics-team.
+  Codex biomedical workflow router for BMAT aliases, life-science research,
+  public-omics analysis, evidence audits, experiment design, translational
+  scouting, manuscript support, loop state, and validator-backed artifacts.
 metadata:
-  version: "0.4.3"
+  version: "0.4.7"
   upstream_suite: "biomedical-agent-teams-claude"
   codex_adapter: true
 allowed-tools: Read, Glob, Grep, WebSearch, WebFetch, Bash
@@ -19,14 +15,28 @@ allowed-tools: Read, Glob, Grep, WebSearch, WebFetch, Bash
 
 This is a Codex adapter for the biomedical agent-team suite. In Codex, treat the
 files under `agents/` as scoped role prompts and the files under `commands/` as
-workflow recipes. This v0.4.3 router uses runtime capability preflight,
+workflow recipes. This v0.4.7 router uses runtime capability preflight,
 protocol/context lock, source-corpus lock, workflow-run state, central claim
 ledger, contract-shaped role outputs, biomedical passport state, stage
 evaluation, audit gates, writer restriction, independent-review policy,
 inline-first hybrid execution, selective spawned review, dependency-aware
 team-level spawned workflows, team output artifact tracking, post-write
 validation, and an optional `scripts/bmat_validate.py` policy validator before
-final output. v0.4.3 tightens omics `run` governance: default reviewer-spawn
+final output. v0.4.7 strengthens package structure validation by requiring
+`source-manifest.json` resource arrays to exactly match the actual packaged
+resource file sets, preventing omitted aliases such as `omics-analysis-team`
+from passing with only count checks. v0.4.6 tightens workflow structure smoke
+safety by requiring command recipes to resolve from the active skill root,
+blocking stale workspace copies from masquerading as the installed workflow, and
+by checking Codex `defaultPrompt` limits during package validation. v0.4.5 makes
+`omics-analysis-team` the default execution axis
+whenever substantive omics analysis is required, strengthens omics `run`
+governance so at least one reviewer runs alongside the analysis whenever
+spawned-subagent or tool-backed review is available, and makes
+`omics-code-reviewer` the default required reviewer for generated or modified
+analysis code. v0.4.4 adds package-wide source/cache parity checks through
+`scripts/bmat_package_check.py`, a docs inventory helper, and handoff/pickup
+templates for resumable BMAT work. v0.4.3 tightens omics `run` governance: default reviewer-spawn
 planning now requires at least one core omics reviewer when spawned-subagent
 support is available, and validator policy flags omics runs that silently set a
 zero reviewer budget without explicit runtime, privacy, or user-compact
@@ -43,9 +53,14 @@ BMAT artifact bundle.
 
 ## First Rule
 
-Do not load every agent by default. Select one workflow recipe from `commands/`,
-read this `SKILL.md` and the selected command recipe to EOF before task actions,
-perform the protocol/context-of-use lock, then read only the specific
+Do not load every agent by default. Select one workflow recipe from `commands`.
+Resolve every command recipe path relative to the directory containing this `SKILL.md`
+(the active BMAT skill root), not from the current working directory, dated
+generated-output folders, or old local working copies. If another workspace copy
+also contains `skills/biomedical-agent-teams`, treat it as a stale artifact
+unless it is the explicitly selected source or installed cache root for this
+run. Read this `SKILL.md` and the selected command recipe to EOF before task
+actions, perform the protocol/context-of-use lock, then read only the specific
 `agents/*.md` files needed for the user's current research question, data type,
 or decision point. If a file read is paginated or truncated, continue until EOF
 before source expansion, external tool use, file writes, code execution, or final
@@ -257,6 +272,10 @@ Execution strategies:
   `translational-scout-team` in an initial parallel phase, then spawn
   dependency-bound teams such as `experiment-design-team` and
   `evidence-audit-team` only after candidate claims or designs are narrowed.
+  If any substantive omics analysis, public-cohort feasibility assessment, or
+  omics result audit is needed as one decision axis, select
+  `omics-analysis-team` for that axis rather than folding omics into a generic
+  literature or mechanism lane.
 - `user_requested_full_spawn`: use only when the user explicitly requests broad
   spawning after being told it is usually inefficient. Require a budget, a
   dependency graph, and downgrade reasons if coordination noise weakens review.
@@ -294,15 +313,25 @@ For spawned command-level teams, the completed team report must be recorded in
 `team_output_artifacts` with dependency-resolved prior outputs before the
 `team_spawn_outputs` stage can pass.
 
-For omics `run`, the default core spawned-reviewer set is
-`omics-code-reviewer`, `omics-provenance-validator`, and
-`biostats-repro-auditor`. Select at least one of these after S1-S3 locks when
-the runtime exposes spawned-subagent or tool-backed reviewer support. Select two
-or more when the run includes donor-aware single-cell contrasts, survival
-modeling, multi-omics integration, extensive generated code, or manuscript-grade
-interpretation. If no core reviewer can be spawned, the preflight must record
-the runtime, privacy, explicit user compact-mode, or budget blocker; the
-workflow-run state must list the skipped reviewer lane and downgrade reason.
+For substantive omics analysis, route through `omics-analysis-team` as the
+primary workflow or as the omics axis of a broader team DAG. For omics `run`,
+the default core spawned-reviewer set is `omics-code-reviewer`,
+`omics-provenance-validator`, and `biostats-repro-auditor`. Select at least one
+of these after S1-S3 locks when the runtime exposes spawned-subagent or
+tool-backed reviewer support, and run the reviewer in parallel with the
+inference/reporting phase when practical so findings can be merged before final
+wording. If the analysis generates, edits, or materially depends on scripts,
+notebooks, shell commands, statistical code, or workflow configs,
+`omics-code-reviewer` is the default required reviewer; add
+`omics-provenance-validator` or `biostats-repro-auditor` when design,
+metadata, biological-unit, survival, or multiplicity risk is material. Select
+two or more reviewers when the run includes donor-aware single-cell contrasts,
+survival modeling, multi-omics integration, extensive generated code, or
+manuscript-grade interpretation. If no core reviewer can be spawned or run as a
+tool-backed reviewer, the preflight must record the runtime, privacy, explicit
+user compact-mode, or budget blocker; the workflow-run state must list the
+skipped reviewer lane and downgrade reason. Role prompts read inline do not
+satisfy this reviewer floor.
 
 ## Default Workflow Spine
 
@@ -619,7 +648,7 @@ Choose the smallest playbook that answers the user:
 |---|---|
 | Broad life-science question or hypothesis validation | `biomedical-research-council` |
 | New CAR-T, cytokine circuit, T cell state, or mechanism idea | `idea-discovery-team` |
-| GEO, SRA, TCGA, HPA, DepMap, single-cell, bulk RNA-seq, survival, CRISPR screen, or public cohort analysis | `omics-analysis-team` |
+| GEO, SRA, TCGA, HPA, DepMap, single-cell, bulk RNA-seq, survival, CRISPR screen, public cohort analysis, or any request where substantive omics feasibility, execution, or audit is needed | `omics-analysis-team` |
 | "Is this claim supported?", manuscript support, reference reliability, conflicting evidence | `evidence-audit-team` |
 | Wet-lab validation, perturbation design, readouts, controls, sample size, feasibility | `experiment-design-team` |
 | Clinical development, trial benchmarking, regulatory or IP scan, competitive positioning | `translational-scout-team` |
@@ -782,6 +811,8 @@ reproduction scripts, scoring scripts, Dockerfiles, or result archives:
 - `templates/team-spawn-plan-template.md`: selective spawned review and
   team-level dependency DAG plan.
 - `templates/rollback-resume-template.md`: durable artifact and resume convention.
+- `templates/bmat-handoff-template.md`: compact current-state handoff checklist.
+- `templates/bmat-pickup-template.md`: compact resume and parity-check checklist.
 - `loops/weekly-literature-watch.md`: recurring public literature source-delta loop.
 - `loops/public-omics-dataset-watch.md`: recurring public omics dataset feasibility loop.
 - `loops/claim-audit-inbox.md`: recurring source-backed claim audit inbox loop.
@@ -801,7 +832,12 @@ reproduction scripts, scoring scripts, Dockerfiles, or result archives:
   permissions, downgrade labels, and reviewer lane bindings.
 - `agent-registry.json`: 35-role registry mapping prompt files to allowed
   workflows, execution surface, privacy level, output schema, and TOML template.
+- `scripts/bmat_validate.py`: deterministic BMAT artifact policy validator.
 - `scripts/bmat_loop_check.py`: deterministic loop-state policy validator.
+- `scripts/bmat_package_check.py`: package-wide version, registry, resource,
+  router, and source/cache parity validator.
+- `scripts/bmat_docs_list.py`: docs inventory helper for command, reference,
+  loop, and template resources.
 - `codex-agents/*.toml`: optional Codex reviewer-agent templates for claim,
   citation, contradiction, causal/confounder, safety/privacy, biostats,
   provenance, risk-of-bias, post-write, omics code, and omics provenance review.

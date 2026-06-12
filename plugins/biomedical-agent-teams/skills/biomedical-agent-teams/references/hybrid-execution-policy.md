@@ -11,7 +11,7 @@ default way to execute every role.
 |---|---|---|
 | `inline_only` | The request is quick, narrow, conceptual, or low risk. | The user asked for independent review or the answer depends on high-confidence source-backed claims. |
 | `inline_first_selective_review` | The main workflow is best kept coherent, but selected reviewer independence improves audit quality. | The task needs several independent domain teams to work in parallel. |
-| `team_level_selective_dag` | The question has separable decision axes such as idea generation, omics feasibility, translational scouting, experiment design, and evidence audit. | The task has a single claim or one obvious workflow recipe. |
+| `team_level_selective_dag` | The question has separable decision axes such as idea generation, omics feasibility, translational scouting, experiment design, and evidence audit. Treat substantive omics feasibility, execution, or audit as an `omics-analysis-team` axis. | The task has a single claim or one obvious workflow recipe. |
 | `user_requested_full_spawn` | The user explicitly requests broad spawning after being told it is usually inefficient. | The user did not authorize broad spawning or the budget/privacy boundary is unclear. |
 | `blocked` | Required runtime capability, safety, privacy, or scope constraints prevent the requested execution pattern. | A narrower inline or selective-review workflow can answer safely. |
 
@@ -69,7 +69,8 @@ Phase 1, independent spawned team bundles when useful:
 - `idea-discovery-team`: candidate hypotheses, mechanism/ranking frame, and
   useful excluded ideas.
 - `omics-analysis-team`: public-data feasibility, S1-S3 plan, or locked audit.
-  Full `run` requires S1-S3 validation before S4/S5 claims.
+  Full `run` requires S1-S3 validation before S4/S5 claims and at least one
+  spawned or tool-backed core reviewer when runtime support is available.
 - `translational-scout-team`: trial, regulatory, IP, operational, and safety
   boundary scan.
 
@@ -119,16 +120,21 @@ claim full-protocol release. If a team output uses nested child agents while
 | deep | `inline_first_selective_review` or `team_level_selective_dag` | 1-3 |
 | audit | `inline_first_selective_review` with optional team DAG for multi-axis audits | 1-4 |
 | omics plan | `inline_only` unless feasibility axes are independent | 0-1 |
-| omics run | `inline_first_selective_review` after S1-S3 locks; minimum one core spawned reviewer when supported | 1-3, with at least one of `omics-code-reviewer`, `omics-provenance-validator`, or `biostats-repro-auditor` unless explicitly blocked or downgraded |
+| omics run | `inline_first_selective_review` after S1-S3 locks; minimum one core spawned or tool-backed reviewer when supported, running alongside S4/S5 when practical | 1-3, with at least one of `omics-code-reviewer`, `omics-provenance-validator`, or `biostats-repro-auditor` unless explicitly blocked or downgraded; use `omics-code-reviewer` by default for code-bearing runs |
 
 ## Omics Run Reviewer Floor
 
-For omics `run`, reviewer spawning is opt-out rather than opt-in after S1-S3
-locks. When the runtime supports spawned subagents or tool-backed reviewer
-instances, select at least one core reviewer:
+For any substantive omics analysis inside BMAT, route the omics work through
+`omics-analysis-team` as the primary workflow or the omics axis of the broader
+DAG. For omics `run`, reviewer spawning or tool-backed review is opt-out rather
+than opt-in after S1-S3 locks. When the runtime supports spawned subagents or
+tool-backed reviewer instances, select at least one core reviewer and start the
+review lane alongside S4 inference/S5 reporting when practical:
 
 - `omics-code-reviewer` for code, raw-data safety, reproducibility, leakage, and
-  parameter provenance.
+  parameter provenance. This is the default required reviewer for code-bearing
+  runs that generate, edit, or materially depend on scripts, notebooks, shell
+  commands, statistical code, or workflow configs.
 - `omics-provenance-validator` for metadata locks, design, biological unit,
   statistical provenance, and claim proportionality.
 - `biostats-repro-auditor` for model validity, donor/unit handling,

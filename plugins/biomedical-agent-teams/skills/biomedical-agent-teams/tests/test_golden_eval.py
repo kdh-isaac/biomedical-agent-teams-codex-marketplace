@@ -9,6 +9,7 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 EVAL_SCRIPT = SKILL_ROOT / "evals" / "run_golden_eval.py"
 TASKS = SKILL_ROOT / "evals" / "golden_tasks.jsonl"
+SAMPLE_OUTPUTS = SKILL_ROOT / "evals" / "sample_outputs.jsonl"
 
 
 def write_jsonl(path: Path, rows: list[dict[str, object]]) -> None:
@@ -33,6 +34,17 @@ def run_eval(outputs: Path, *extra_args: str) -> subprocess.CompletedProcess[str
         capture_output=True,
         check=False,
     )
+
+
+def test_readme_sample_outputs_exist_and_strict_eval_passes() -> None:
+    result = run_eval(SAMPLE_OUTPUTS, "--strict")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["output_integrity_ok"] is True
+    assert payload["missing_output_task_ids"] == []
+    assert payload["unknown_output_task_ids"] == []
+    assert payload["duplicate_output_task_ids"] == []
 
 
 def test_eval_reports_unknown_and_duplicate_output_task_ids(tmp_path: Path) -> None:

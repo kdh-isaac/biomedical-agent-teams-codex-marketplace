@@ -1,13 +1,13 @@
 {
-  "version": "0.4.3",
+  "version": "0.4.7",
   "runtime": "codex",
   "entrypoint": "SKILL.md",
   "agent_count": 35,
   "command_count": 6,
-  "template_count": 10,
+  "template_count": 12,
   "contract_count": 13,
   "reference_count": 9,
-  "script_count": 2,
+  "script_count": 4,
   "test_fixture_count": 11,
   "eval_count": 1,
   "golden_task_count": 22,
@@ -164,7 +164,9 @@
     "hypothesis-tournament-template",
     "stage-evaluation-template",
     "team-spawn-plan-template",
-    "rollback-resume-template"
+    "rollback-resume-template",
+    "bmat-handoff-template",
+    "bmat-pickup-template"
   ],
   "contracts": [
     "preflight-contract.schema",
@@ -197,6 +199,12 @@
     "public-omics-dataset-watch",
     "claim-audit-inbox",
     "hypothesis-triage"
+  ],
+  "scripts": [
+    "bmat_validate",
+    "bmat_loop_check",
+    "bmat_package_check",
+    "bmat_docs_list"
   ],
   "codex_agent_templates": [
     "claim-level-evidence-verifier",
@@ -256,5 +264,29 @@
     "nested-spawn-policy-enforcement-for-team-dag",
     "workflow-template-and-hybrid-policy-team-dag-verification-docs",
     "package-metadata-version-bump-to-0-4-1"
+  ],
+  "new_in_v0_4_4": [
+    "package-wide-bmat-package-check-cli",
+    "docs-resource-inventory-helper",
+    "handoff-pickup-resume-templates",
+    "source-cache-version-and-resource-parity-checks",
+    "package-metadata-version-bump-to-0-4-4"
+  ],
+  "new_in_v0_4_5": [
+    "omics-analysis-team-default-axis-for-substantive-omics-analysis",
+    "parallel-core-reviewer-floor-for-omics-runs-after-s1-s3-locks",
+    "omics-code-reviewer-default-required-for-code-bearing-omics-runs",
+    "package-metadata-version-bump-to-0-4-5"
+  ],
+  "new_in_v0_4_6": [
+    "skill-root-relative-command-recipe-resolution-guard",
+    "codex-default-prompt-limit-check",
+    "package-check-regression-tests-for-workflow-structure-smoke-safety",
+    "package-metadata-version-bump-to-0-4-6"
+  ],
+  "new_in_v0_4_7": [
+    "source-manifest-exact-resource-set-validation",
+    "package-check-regression-test-for-missing-omics-command-manifest-entry",
+    "package-metadata-version-bump-to-0-4-7"
   ]
 }
