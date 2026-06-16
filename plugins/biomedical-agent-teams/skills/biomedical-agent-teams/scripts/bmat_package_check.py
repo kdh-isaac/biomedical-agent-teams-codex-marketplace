@@ -46,9 +46,16 @@ SOURCE_MANIFEST_COLLECTIONS = {
     "codex_agent_templates": ("codex-agents", ".toml"),
 }
 CODEX_DEFAULT_PROMPT_LIMIT = 3
+SKILL_ROUTER_MAX_BYTES = 16_000
 ROUTER_ROOT_GUARD_PHRASE = (
     "Resolve every command recipe path relative to the directory containing this `SKILL.md`"
 )
+LAZY_LOAD_GUARD_PHRASES = {
+    "ROUTER_LAZY_LOAD_GUARD_MISSING": "Do not load every agent, command, reference, contract, or template by default.",
+    "ROUTER_INVENTORY_DISCOVERY_GUARD_MISSING": "Use `source-manifest.json` and `scripts/bmat_docs_list.py` for inventory discovery.",
+    "VALIDATOR_RUNTIME_DOWNGRADE_GUARD_MISSING": "validator_unavailable_due_to_runtime",
+    "VALIDATOR_FULL_PROTOCOL_CEILING_MISSING": "Do not claim `Full protocol followed`",
+}
 
 
 def count_golden_tasks(skill_root: Path, findings: list[Finding]) -> int:
@@ -339,28 +346,50 @@ def validate_registry(skill_root: Path, findings: list[Finding]) -> None:
 
 
 def validate_router_mentions(skill_root: Path, findings: list[Finding]) -> None:
-    skill_text = read_text(skill_root / "SKILL.md", findings)
+    skill_path = skill_root / "SKILL.md"
+    skill_text = read_text(skill_path, findings)
     source_manifest = read_json(skill_root / "source-manifest.json", findings)
+    try:
+        skill_size = len(skill_path.read_bytes())
+    except FileNotFoundError:
+        skill_size = 0
+    if skill_size > SKILL_ROUTER_MAX_BYTES:
+        findings.append(
+            Finding(
+                "ERROR",
+                "SKILL_ROUTER_TOO_LARGE",
+                (
+                    "SKILL.md must remain a lightweight router and lazy-load "
+                    f"command/reference docs: maximum {SKILL_ROUTER_MAX_BYTES} bytes, found {skill_size}"
+                ),
+                str(skill_path),
+            )
+        )
+    normalized_skill_text = re.sub(r"\s+", " ", skill_text)
     if ROUTER_ROOT_GUARD_PHRASE not in skill_text:
         findings.append(
             Finding(
                 "ERROR",
                 "ROUTER_ROOT_GUARD_MISSING",
                 "router must require command recipes to resolve relative to the active SKILL.md directory",
-                str(skill_root / "SKILL.md"),
+                str(skill_path),
             )
         )
+    for code, phrase in LAZY_LOAD_GUARD_PHRASES.items():
+        if phrase not in normalized_skill_text:
+            findings.append(
+                Finding(
+                    "ERROR",
+                    code,
+                    f"router missing required lazy-load/runtime downgrade guard phrase: {phrase}",
+                    str(skill_path),
+                )
+            )
     if not isinstance(source_manifest, dict):
         return
     for command in source_manifest.get("commands", []):
         if f"commands/{command}.md" not in skill_text:
-            findings.append(Finding("ERROR", "ROUTER_REFERENCE_MISSING", f"router does not mention command {command}", str(skill_root / "SKILL.md")))
-    for collection in ("contracts", "templates", "references"):
-        for item in source_manifest.get(collection, []):
-            suffix = ".json" if collection == "contracts" else ".md"
-            ref = f"{collection}/{item}{suffix}"
-            if ref not in skill_text:
-                findings.append(Finding("ERROR", "ROUTER_REFERENCE_MISSING", f"router does not mention {ref}", str(skill_root / "SKILL.md")))
+            findings.append(Finding("ERROR", "ROUTER_REFERENCE_MISSING", f"router does not mention command {command}", str(skill_path)))
 
 
 def validate_docs_inventory(skill_root: Path, findings: list[Finding]) -> None:

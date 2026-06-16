@@ -22,8 +22,14 @@ preflight and a compact preflight contract with:
 `spawned_review_plan`, `team_spawn_plan`,
 `all_role_spawn_avoidance_reason`, `nested_spawn_policy`, and
 `post_team_audit_plan`. If runtime capability preflight or this contract is absent,
-label the result as a compact or partial workflow rather than a full
-translational audit.
+use the strongest downgraded workflow label supported by the produced artifacts
+and runtime rather than a full translational audit.
+
+If shell/code execution is unavailable, or if `scripts/bmat_validate.py` cannot
+be run because shell/code execution is unavailable, record
+`validator_unavailable_due_to_runtime` in preflight, workflow-run downgrade
+reasons, and final skipped gates. Do not claim `Full protocol followed` in that
+state.
 
 ## Spawned Team Bundle Policy
 

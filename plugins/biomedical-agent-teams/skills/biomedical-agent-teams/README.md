@@ -5,7 +5,32 @@ audit gates, writer restriction, post-write final validation, loop-state
 resources, connector binding, team output artifact tracking, and optional
 deterministic artifact validators.
 
-Codex uses `SKILL.md` as the router and treats `agents/*.md` as role prompts.
+Codex uses `SKILL.md` as a lightweight router and treats `agents/*.md` as role
+prompts. Long governance instructions live in command recipes, references,
+templates, contracts, and scripts that are lazy-loaded only when needed.
+
+## v0.4.9 Updates
+
+- Splits the previous large root router into a compact `SKILL.md` policy router
+  plus lazy-loaded `commands/*.md` recipes.
+- Adds package checks for router byte size, lazy-load resource discovery, and
+  validator runtime downgrade guard phrases.
+- Adds golden eval schema validation and a strict release gate for PMID drift,
+  contradiction, and overclaim detection with negative controls.
+- Extends runtime capability preflight fields to record validator CLI
+  availability and `validator_unavailable_due_to_runtime`.
+- Updates metadata and templates to 0.4.9.
+
+## v0.4.8 Updates
+
+- Adds a package-level quickstart for workflow and mode selection.
+- Improves docs inventory output with fallback summaries for resources that do
+  not carry frontmatter summaries.
+- Adds `scripts/bmat_init_bundle.py` to create starter artifact bundles using
+  validator-standard filenames.
+- Adds `scripts/bmat_selftest.py` to run dependency-free package, loop, bundle,
+  and golden-eval smoke checks.
+- Updates metadata and templates to 0.4.8.
 
 ## v0.4.7 Updates
 
@@ -109,7 +134,7 @@ Codex uses `SKILL.md` as the router and treats `agents/*.md` as role prompts.
 
 ```mermaid
 flowchart TD
-    accTitle: BMAT v0.4.7 Workflow Structure
+    accTitle: BMAT v0.4.9 Workflow Structure
     accDescr: Vertical BMAT workflow spine with optional loop, team DAG, and reviewer lanes feeding back into the central ledger.
 
     request["User request or BMAT alias"]
@@ -119,7 +144,7 @@ flowchart TD
     ledger["4. Central claim ledger<br/>source corpus<br/>workflow-run state"]
     synth["5. Ledger-only synthesis"]
     release{"6. Release gates<br/>post-write + bmat_validate.py"}
-    label["7. Final workflow label<br/>Full / Compact / Partial / Blocked"]
+    label["7. Final workflow label<br/>Full / Contract / Compact / Limited / Partial / Blocked"]
 
     request --> lock --> route --> spine --> ledger --> synth --> release --> label
 

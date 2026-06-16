@@ -37,6 +37,53 @@ def resolve_skill_root(root: Path) -> Path:
     raise SystemExit(2)
 
 
+def _first_heading(text: str) -> str:
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("# "):
+            return stripped[2:].strip()
+    return ""
+
+
+def _body_after_frontmatter(text: str) -> str:
+    match = re.match(r"\A---\r?\n.*?\r?\n---[ \t]*(?:\r?\n|\Z)", text, re.S)
+    if match:
+        return text[match.end() :]
+    return text
+
+
+def _first_prose_sentence(text: str) -> str:
+    body = _body_after_frontmatter(text)
+    paragraph: list[str] = []
+    for raw_line in body.splitlines():
+        line = raw_line.strip()
+        if not line:
+            if paragraph:
+                break
+            continue
+        if line.startswith(("#", "|", "-", "`")):
+            if paragraph:
+                break
+            continue
+        paragraph.append(line)
+    if paragraph:
+        summary = " ".join(paragraph)
+        if len(summary) > 180:
+            return summary[:177].rstrip() + "..."
+        return summary
+    return ""
+
+
+def fallback_summary(text: str, path: Path) -> str:
+    heading = _first_heading(text)
+    prose = _first_prose_sentence(text)
+    if prose:
+        return prose
+    if heading:
+        return f"{heading}."
+    return f"{path.stem.replace('-', ' ').title()}."
+
+
 def frontmatter(text: str) -> dict[str, list[str] | str]:
     match = re.match(r"\A---\r?\n(.*?)\r?\n---[ \t]*(?:\r?\n|\Z)", text, re.S)
     if not match:
@@ -77,13 +124,14 @@ def main() -> int:
             continue
         print(f"\n## {folder.replace('-', ' ').title()}")
         for path in sorted(folder_path.glob("*.md")):
-            meta = frontmatter(path.read_text(encoding="utf-8"))
+            text = path.read_text(encoding="utf-8")
+            meta = frontmatter(text)
             rel = path.relative_to(root)
             summary = meta.get("summary")
             if isinstance(summary, str):
                 print(f"- `{rel}` - {summary}")
             else:
-                print(f"- `{rel}` - [summary missing]")
+                print(f"- `{rel}` - {fallback_summary(text, path)}")
             read_when = meta.get("read_when")
             if isinstance(read_when, list) and read_when:
                 print(f"  - Read when: {'; '.join(read_when)}")

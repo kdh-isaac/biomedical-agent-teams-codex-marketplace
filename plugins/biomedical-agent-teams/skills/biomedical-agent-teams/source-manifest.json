@@ -1,5 +1,5 @@
 {
-  "version": "0.4.7",
+  "version": "0.4.9",
   "runtime": "codex",
   "entrypoint": "SKILL.md",
   "agent_count": 35,
@@ -7,10 +7,10 @@
   "template_count": 12,
   "contract_count": 13,
   "reference_count": 9,
-  "script_count": 4,
+  "script_count": 6,
   "test_fixture_count": 11,
-  "eval_count": 1,
-  "golden_task_count": 22,
+  "eval_count": 2,
+  "golden_task_count": 20,
   "loop_count": 4,
   "codex_agent_template_count": 11,
   "agent_registry_count": 1,
@@ -204,7 +204,9 @@
     "bmat_validate",
     "bmat_loop_check",
     "bmat_package_check",
-    "bmat_docs_list"
+    "bmat_docs_list",
+    "bmat_init_bundle",
+    "bmat_selftest"
   ],
   "codex_agent_templates": [
     "claim-level-evidence-verifier",
@@ -288,5 +290,21 @@
     "source-manifest-exact-resource-set-validation",
     "package-check-regression-test-for-missing-omics-command-manifest-entry",
     "package-metadata-version-bump-to-0-4-7"
+  ],
+  "new_in_v0_4_8": [
+    "docs-inventory-fallback-summaries-for-frontmatter-light-resources",
+    "bmat-init-bundle-scaffold-generator-for-validator-named-artifacts",
+    "dependency-free-bmat-selftest-smoke-runner",
+    "quickstart-guide-for-workflow-selection-and-bundle-setup",
+    "package-metadata-version-bump-to-0-4-8"
+  ],
+  "new_in_v0_4_9": [
+    "golden-eval-schema-validation-wrapper",
+    "golden-eval-release-gate-for-pmid-drift-contradiction-and-overclaim",
+    "twenty-case-public-synthetic-golden-eval-set-with-negative-controls",
+    "lightweight-skill-router-with-lazy-loaded-command-recipes",
+    "package-check-router-size-and-lazy-load-guard",
+    "validator-runtime-unavailable-downgrade-guard",
+    "package-metadata-version-bump-to-0-4-9"
   ]
 }

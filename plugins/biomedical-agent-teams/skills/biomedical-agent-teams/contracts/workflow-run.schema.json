@@ -184,8 +184,10 @@
       "type": "string",
       "enum": [
         "Full protocol followed",
+        "Contract-shaped artifact bundle",
         "Compact standard workflow",
         "Biomedical Agent Teams-informed narrative review",
+        "Limited capability-downgraded workflow",
         "Partial workflow; formal gates skipped",
         "Blocked"
       ]

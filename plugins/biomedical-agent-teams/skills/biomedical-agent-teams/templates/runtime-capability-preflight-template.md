@@ -8,17 +8,20 @@ workflow wording grants unavailable tools.
 |---|---|
 | runtime_id | RCP-YYYYMMDD-001 |
 | codex_client |  |
-| plugin_version | 0.4.7 |
+| plugin_version | 0.4.9 |
 | workspace_root |  |
 | web_search_available | yes / no / unknown / not-applicable |
 | shell_available | yes / no / unknown / not-applicable |
 | file_read_available | yes / no / unknown / not-applicable |
 | file_write_available | yes / no / unknown / not-applicable |
 | network_available | yes / no / unknown / not-applicable |
+| validator_cli_available | yes / no / unknown / not-applicable |
+| validator_unavailable_reason | none / validator_unavailable_due_to_runtime / missing_bundle / missing_jsonschema / not-applicable |
 | spawned_subagents_supported | yes / no / unknown / not-applicable |
 | spawned_review_supported | yes / no / unknown / not-applicable |
 | team_level_spawn_supported | yes / no / unknown / not-applicable |
 | sandbox_profile | none / read-only / workspace-write / unrestricted / unknown |
+| label_ceiling_due_to_runtime | Full protocol followed / Contract-shaped artifact bundle / Compact standard workflow / Limited capability-downgraded workflow / Blocked |
 | downgrade_rule |  |
 
 ## Execution Strategy Capability
@@ -48,6 +51,10 @@ workflow wording grants unavailable tools.
 If a required tool, spawned subagent, database, file-write path, or network
 capability is unavailable, mark the affected gate as `skipped` or `block` in the
 workflow run state and do not label the output `Full protocol followed`.
+If shell/code execution is unavailable, or if `scripts/bmat_validate.py` cannot
+be run because shell/code execution is unavailable, record
+`validator_unavailable_due_to_runtime` and set the runtime label ceiling below
+`Full protocol followed`.
 If spawned subagents are unavailable, downgrade `inline_first_selective_review`
 or `team_level_selective_dag` to `inline_only` or label the independent-review
 claim as not performed.

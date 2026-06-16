@@ -14,6 +14,14 @@ PLUGIN_JSON = PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
 ROUTER_ROOT_GUARD_PHRASE = (
     "Resolve every command recipe path relative to the directory containing this `SKILL.md`"
 )
+ROUTER_LAZY_LOAD_GUARD_PHRASE = (
+    "Do not load every agent, command, reference, contract, or template by default."
+)
+ROUTER_INVENTORY_DISCOVERY_GUARD_PHRASE = (
+    "Use `source-manifest.json` and `scripts/bmat_docs_list.py` for inventory discovery."
+)
+VALIDATOR_RUNTIME_DOWNGRADE_TOKEN = "validator_unavailable_due_to_runtime"
+SKILL_ROUTER_MAX_BYTES = 16_000
 
 
 def run_package_check(root: Path) -> subprocess.CompletedProcess[str]:
@@ -46,6 +54,12 @@ def test_current_package_check_passes() -> None:
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+def test_current_skill_router_stays_under_loader_budget() -> None:
+    skill_path = SKILL_ROOT / "SKILL.md"
+
+    assert len(skill_path.read_bytes()) <= SKILL_ROUTER_MAX_BYTES
+
+
 def test_package_check_flags_plugin_default_prompt_limit(tmp_path: Path) -> None:
     plugin_root = copy_plugin(tmp_path)
     plugin_json = plugin_root / ".codex-plugin" / "plugin.json"
@@ -74,6 +88,62 @@ def test_package_check_flags_missing_skill_root_relative_router_guard(tmp_path: 
 
     assert result.returncode == 1
     assert "ROUTER_ROOT_GUARD_MISSING" in result.stdout
+
+
+def test_package_check_flags_bloated_skill_router(tmp_path: Path) -> None:
+    plugin_root = copy_plugin(tmp_path)
+    skill_path = plugin_root / "skills" / "biomedical-agent-teams" / "SKILL.md"
+    skill_path.write_text(
+        skill_path.read_text(encoding="utf-8") + "\n" + ("x" * (SKILL_ROUTER_MAX_BYTES + 1)),
+        encoding="utf-8",
+    )
+
+    result = run_package_check(plugin_root)
+
+    assert result.returncode == 1
+    assert "SKILL_ROUTER_TOO_LARGE" in result.stdout
+
+
+def test_package_check_flags_missing_lazy_load_guard(tmp_path: Path) -> None:
+    plugin_root = copy_plugin(tmp_path)
+    skill_path = plugin_root / "skills" / "biomedical-agent-teams" / "SKILL.md"
+    text = skill_path.read_text(encoding="utf-8")
+    skill_path.write_text(text.replace(ROUTER_LAZY_LOAD_GUARD_PHRASE, ""), encoding="utf-8")
+
+    result = run_package_check(plugin_root)
+
+    assert result.returncode == 1
+    assert "ROUTER_LAZY_LOAD_GUARD_MISSING" in result.stdout
+
+
+def test_package_check_flags_missing_inventory_discovery_guard(tmp_path: Path) -> None:
+    plugin_root = copy_plugin(tmp_path)
+    skill_path = plugin_root / "skills" / "biomedical-agent-teams" / "SKILL.md"
+    text = skill_path.read_text(encoding="utf-8")
+    skill_path.write_text(
+        text.replace(ROUTER_INVENTORY_DISCOVERY_GUARD_PHRASE, ""),
+        encoding="utf-8",
+    )
+
+    result = run_package_check(plugin_root)
+
+    assert result.returncode == 1
+    assert "ROUTER_INVENTORY_DISCOVERY_GUARD_MISSING" in result.stdout
+
+
+def test_package_check_flags_missing_validator_runtime_downgrade_guard(tmp_path: Path) -> None:
+    plugin_root = copy_plugin(tmp_path)
+    skill_path = plugin_root / "skills" / "biomedical-agent-teams" / "SKILL.md"
+    text = skill_path.read_text(encoding="utf-8")
+    skill_path.write_text(
+        text.replace(VALIDATOR_RUNTIME_DOWNGRADE_TOKEN, "validator-runtime-token-removed"),
+        encoding="utf-8",
+    )
+
+    result = run_package_check(plugin_root)
+
+    assert result.returncode == 1
+    assert "VALIDATOR_RUNTIME_DOWNGRADE_GUARD_MISSING" in result.stdout
 
 
 def test_package_check_flags_source_manifest_missing_actual_command(tmp_path: Path) -> None:

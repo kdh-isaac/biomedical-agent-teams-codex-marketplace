@@ -85,8 +85,14 @@ capability preflight and then a compact preflight contract:
 17. `post_team_audit_plan`
 
 If runtime capability preflight or this contract is absent, the final output
-must be labeled as a compact or partial workflow, not as a full Biomedical
-Research Council audit.
+must use the strongest downgraded workflow label supported by the produced
+artifacts and runtime, not a full Biomedical Research Council audit.
+
+If shell/code execution is unavailable, or if `scripts/bmat_validate.py` cannot
+be run because shell/code execution is unavailable, record
+`validator_unavailable_due_to_runtime` in preflight, workflow-run downgrade
+reasons, and final skipped gates. Do not claim `Full protocol followed` in that
+state.
 
 ## Hybrid Execution Policy
 
@@ -234,8 +240,10 @@ Audit bundle final includes:
 Final workflow label must be one of:
 
 - `Full protocol followed`
+- `Contract-shaped artifact bundle`
 - `Compact standard workflow`
 - `Biomedical Agent Teams-informed narrative review`
+- `Limited capability-downgraded workflow`
 - `Partial workflow; formal gates skipped`
 - `Blocked`
 
@@ -243,8 +251,8 @@ Use `Full protocol followed` only when mandatory artifacts exist, required
 gates pass or pass with caveats, post-write validation is not blocked, and the
 workflow has a spawned, separate-model, tool-backed, external, human, or
 tool-corroborated review surface. When `scripts/bmat_validate.py` was not run
-against a complete artifact bundle, downgrade to a compact or partial workflow
-label.
+against a complete artifact bundle, downgrade to the strongest supported
+non-full workflow label.
 
 ## Post-Write Self-Check
 

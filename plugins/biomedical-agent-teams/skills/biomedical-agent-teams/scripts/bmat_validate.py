@@ -43,12 +43,16 @@ SCHEMA_FILES = {
 PASSING_STAGE_STATUS = {"pass", "pass-with-caveats", "not-applicable"}
 FULL_LABEL = "Full protocol followed"
 COMPACT_LABEL = "Compact standard workflow"
+CONTRACT_LABEL = "Contract-shaped artifact bundle"
+LIMITED_LABEL = "Limited capability-downgraded workflow"
 NARRATIVE_LABEL = "Biomedical Agent Teams-informed narrative review"
 BLOCKED_LABEL = "Blocked"
 PARTIAL_LABEL = "Partial workflow; formal gates skipped"
 WORKFLOW_LABELS = {
     FULL_LABEL,
     COMPACT_LABEL,
+    CONTRACT_LABEL,
+    LIMITED_LABEL,
     NARRATIVE_LABEL,
     PARTIAL_LABEL,
     BLOCKED_LABEL,
@@ -611,6 +615,28 @@ def team_artifact_key(value: dict[str, Any]) -> tuple[str, int] | None:
     return team, phase
 
 
+def find_duplicate_values(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    duplicates: set[str] = set()
+    for value in values:
+        if value in seen:
+            duplicates.add(value)
+        else:
+            seen.add(value)
+    return sorted(duplicates)
+
+
+def find_duplicate_keys(keys: list[tuple[str, int]]) -> list[tuple[str, int]]:
+    seen: set[tuple[str, int]] = set()
+    duplicates: set[tuple[str, int]] = set()
+    for key in keys:
+        if key in seen:
+            duplicates.add(key)
+        else:
+            seen.add(key)
+    return sorted(duplicates)
+
+
 def validate_complete_team_output_fields(output: dict[str, Any], findings: list[Finding]) -> None:
     team = str(output.get("team", "unknown")).strip() or "unknown"
     artifact_id = str(output.get("artifact_id", "")).strip()
@@ -668,9 +694,25 @@ def validate_team_dag_policy(artifacts: dict[str, Any], findings: list[Finding])
             )
         )
 
-    lane_keys = {key for lane in lanes if (key := team_artifact_key(lane)) is not None}
+    lane_keys_list = [key for lane in lanes if (key := team_artifact_key(lane)) is not None]
+    lane_keys = set(lane_keys_list)
     complete_lanes = [lane for lane in lanes if lane.get("status") == "complete"]
     complete_outputs = [output for output in outputs if output.get("status") == "complete"]
+    complete_lane_keys = [
+        key
+        for lane in complete_lanes
+        if (key := team_artifact_key(lane)) is not None
+    ]
+    complete_output_keys = [
+        key
+        for output in complete_outputs
+        if (key := team_artifact_key(output)) is not None
+    ]
+    complete_output_ids = [
+        artifact_id
+        for output in complete_outputs
+        if (artifact_id := str(output.get("artifact_id", "")).strip())
+    ]
     complete_output_by_key = {
         key: output
         for output in complete_outputs
@@ -686,6 +728,31 @@ def validate_team_dag_policy(artifacts: dict[str, Any], findings: list[Finding])
         for lane in complete_lanes
         if str(lane.get("team", "")).strip()
     }
+
+    for team, phase in find_duplicate_keys(complete_lane_keys):
+        findings.append(
+            Finding(
+                "ERROR",
+                "TEAM_SPAWN_LANE_DUPLICATE",
+                f"complete team_spawn_lanes contains duplicate record for {team} phase {phase}",
+            )
+        )
+    for team, phase in find_duplicate_keys(complete_output_keys):
+        findings.append(
+            Finding(
+                "ERROR",
+                "TEAM_OUTPUT_DUPLICATE",
+                f"complete team_output_artifacts contains duplicate output for {team} phase {phase}",
+            )
+        )
+    for artifact_id in find_duplicate_values(complete_output_ids):
+        findings.append(
+            Finding(
+                "ERROR",
+                "TEAM_OUTPUT_DUPLICATE_ARTIFACT_ID",
+                f"complete team_output_artifacts contains duplicate artifact_id {artifact_id}",
+            )
+        )
 
     nested_allowed = run_state.get("nested_spawn_allowed") is True
     for lane in lanes:
@@ -769,6 +836,8 @@ def validate_team_dag_policy(artifacts: dict[str, Any], findings: list[Finding])
     for output in complete_outputs:
         team = str(output.get("team", "unknown")).strip() or "unknown"
         artifact_id = str(output.get("artifact_id", "unknown")).strip() or "unknown"
+        key = team_artifact_key(output)
+        phase = key[1] if key else 0
         depends_on_outputs = output.get("depends_on_outputs", [])
         if not isinstance(depends_on_outputs, list):
             findings.append(
@@ -787,6 +856,26 @@ def validate_team_dag_policy(artifacts: dict[str, Any], findings: list[Finding])
                         "ERROR",
                         "TEAM_OUTPUT_DEPENDENCY_UNRESOLVED",
                         f"complete team output {artifact_id} for {team} depends on missing complete output {dependency}",
+                    )
+                )
+                continue
+            if dependency and dependency == artifact_id:
+                findings.append(
+                    Finding(
+                        "ERROR",
+                        "TEAM_OUTPUT_DEPENDENCY_SELF_REFERENCE",
+                        f"complete team output {artifact_id} for {team} depends on itself",
+                    )
+                )
+                continue
+            dependency_output = complete_output_by_id.get(dependency)
+            dependency_key = team_artifact_key(dependency_output or {})
+            if dependency_key is not None and dependency_key[1] >= phase:
+                findings.append(
+                    Finding(
+                        "ERROR",
+                        "TEAM_OUTPUT_DEPENDENCY_ORDER_INVALID",
+                        f"complete team output {artifact_id} for {team} depends on non-prior output {dependency}",
                     )
                 )
 
@@ -904,6 +993,20 @@ def validate_spawned_instance_policy(artifacts: dict[str, Any], findings: list[F
     complete_roles = complete_spawned_review_roles(run_state)
     if not instances and not complete_roles:
         return
+
+    instance_ids = [
+        instance_id
+        for instance in instances
+        if (instance_id := str(instance.get("instance_id", "")).strip())
+    ]
+    for instance_id in find_duplicate_values(instance_ids):
+        findings.append(
+            Finding(
+                "ERROR",
+                "SPAWNED_INSTANCE_DUPLICATE_ID",
+                f"spawned_agent_instances contains duplicate instance_id {instance_id}",
+            )
+        )
 
     known_agent_ids = registry_agent_ids(findings)
     complete_instance_agents: set[str] = set()

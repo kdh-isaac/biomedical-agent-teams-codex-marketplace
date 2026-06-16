@@ -8,7 +8,7 @@ translational scouting, omics reporting, or audit verdicts.
 | field | value |
 |---|---|
 | verdict | pass / pass-with-revisions / block |
-| workflow_label_after_gate | Full protocol followed / Compact standard workflow / Biomedical Agent Teams-informed narrative review / Partial workflow; formal gates skipped / Blocked |
+| workflow_label_after_gate | Full protocol followed / Contract-shaped artifact bundle / Compact standard workflow / Biomedical Agent Teams-informed narrative review / Limited capability-downgraded workflow / Partial workflow; formal gates skipped / Blocked |
 | release_ready_claim_strength | supported / partially supported / suggestive / exploratory / conflicting / unsupported / not assessable |
 
 ## Claim And Citation Checks

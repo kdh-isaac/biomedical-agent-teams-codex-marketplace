@@ -41,8 +41,29 @@
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/availability" }
     },
+    "validator_cli_available": { "$ref": "#/$defs/availability" },
+    "validator_unavailable_reason": {
+      "type": "string",
+      "enum": [
+        "none",
+        "validator_unavailable_due_to_runtime",
+        "missing_bundle",
+        "missing_jsonschema",
+        "not-applicable"
+      ]
+    },
     "spawned_subagents_supported": { "$ref": "#/$defs/availability" },
     "sandbox_profile": { "type": "string" },
+    "label_ceiling_due_to_runtime": {
+      "type": "string",
+      "enum": [
+        "Full protocol followed",
+        "Contract-shaped artifact bundle",
+        "Compact standard workflow",
+        "Limited capability-downgraded workflow",
+        "Blocked"
+      ]
+    },
     "downgrade_rule": { "type": "string" },
     "notes": {
       "type": "array",

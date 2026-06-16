@@ -16,7 +16,34 @@ spawned or tool-backed review.
   hybrid execution, selective spawned review, team-level spawned workflow DAGs,
   integrity-gate resources, loop-state resources, connector binding, Codex
   reviewer-agent templates, team output artifact tracking, and deterministic
-  BMAT artifact and loop-state validators.
+  BMAT artifact and loop-state validators. `SKILL.md` is a lightweight router;
+  command recipes, references, templates, and contracts are lazy-loaded from the
+  selected alias and `source-manifest.json`.
+
+## v0.4.9 Updates
+
+- Replaces the large root `SKILL.md` manual with a lightweight router that
+  lazy-loads `commands/*.md` recipes and discovers broader resources through
+  `source-manifest.json` and `scripts/bmat_docs_list.py`.
+- Adds a package-check router size ceiling plus lazy-load and validator-runtime
+  downgrade guards.
+- Adds a 20-case golden eval gate and schema wrapper for PMID drift,
+  contradiction, overclaim, provenance/statistics, and negative-control cases.
+- Records `validator_unavailable_due_to_runtime` as an explicit preflight and
+  final-label downgrade reason when `scripts/bmat_validate.py` cannot run.
+- Updates package metadata to version 0.4.9.
+
+## v0.4.8 Updates
+
+- Adds `README.quickstart.md` with workflow selection, mode routing, and bundle
+  setup examples.
+- Improves `scripts/bmat_docs_list.py` so references, loops, and templates
+  without frontmatter summaries still get useful fallback summaries.
+- Adds `scripts/bmat_init_bundle.py` to scaffold BMAT artifact bundles with the
+  validator's standard filenames.
+- Adds `scripts/bmat_selftest.py` for dependency-free package, loop, bundle, and
+  golden-eval smoke checks when `pytest` is unavailable.
+- Updates package metadata to version 0.4.8.
 
 ## v0.4.7 Updates
 
@@ -157,7 +184,7 @@ spawned or tool-backed review.
 
 ```mermaid
 flowchart TD
-    accTitle: BMAT v0.4.7 Workflow Structure
+    accTitle: BMAT v0.4.9 Workflow Structure
     accDescr: Vertical BMAT workflow spine with optional loop, team DAG, and reviewer lanes feeding back into the central ledger.
 
     request["User request or BMAT alias"]
@@ -167,7 +194,7 @@ flowchart TD
     ledger["4. Central claim ledger<br/>source corpus<br/>workflow-run state"]
     synth["5. Ledger-only synthesis"]
     release{"6. Release gates<br/>post-write + bmat_validate.py"}
-    label["7. Final workflow label<br/>Full / Compact / Partial / Blocked"]
+    label["7. Final workflow label<br/>Full / Contract / Compact / Limited / Partial / Blocked"]
 
     request --> lock --> route --> spine --> ledger --> synth --> release --> label
 

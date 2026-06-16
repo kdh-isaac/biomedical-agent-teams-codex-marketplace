@@ -301,6 +301,20 @@ def test_complete_spawned_instance_requires_output_artifact(tmp_path: Path) -> N
     assert "SPAWNED_INSTANCE_MISSING_OUTPUT_ARTIFACT" in combined_output(result)
 
 
+def test_duplicate_spawned_instance_id_fails(tmp_path: Path) -> None:
+    bundle = tmp_path / "bundle"
+    shutil.copytree(FIXTURES / "valid_full_protocol_bundle", bundle)
+    run_state_path = bundle / "run_state.json"
+    run_state = json.loads(run_state_path.read_text(encoding="utf-8"))
+    run_state["spawned_agent_instances"].append(dict(run_state["spawned_agent_instances"][0]))
+    run_state_path.write_text(json.dumps(run_state, indent=2), encoding="utf-8")
+
+    result = run_validator_path(bundle)
+
+    assert result.returncode == 1
+    assert "SPAWNED_INSTANCE_DUPLICATE_ID" in combined_output(result)
+
+
 def test_malformed_spawned_instances_shape_returns_policy_error(tmp_path: Path) -> None:
     bundle = tmp_path / "bundle"
     shutil.copytree(FIXTURES / "valid_full_protocol_bundle", bundle)
@@ -505,6 +519,85 @@ def test_team_output_dependency_must_resolve_to_complete_artifact(tmp_path: Path
 
     assert result.returncode == 1
     assert "TEAM_OUTPUT_DEPENDENCY_UNRESOLVED" in combined_output(result)
+
+
+def test_duplicate_complete_team_spawn_lane_fails(tmp_path: Path) -> None:
+    bundle = tmp_path / "bundle"
+    shutil.copytree(FIXTURES / "valid_full_protocol_bundle", bundle)
+    run_state_path = bundle / "run_state.json"
+    run_state = json.loads(run_state_path.read_text(encoding="utf-8"))
+    add_valid_team_dag(run_state)
+    run_state["team_spawn_lanes"].append(dict(run_state["team_spawn_lanes"][0]))
+    run_state_path.write_text(json.dumps(run_state, indent=2), encoding="utf-8")
+
+    result = run_validator_path(bundle)
+
+    assert result.returncode == 1
+    assert "TEAM_SPAWN_LANE_DUPLICATE" in combined_output(result)
+
+
+def test_duplicate_complete_team_output_key_fails(tmp_path: Path) -> None:
+    bundle = tmp_path / "bundle"
+    shutil.copytree(FIXTURES / "valid_full_protocol_bundle", bundle)
+    run_state_path = bundle / "run_state.json"
+    run_state = json.loads(run_state_path.read_text(encoding="utf-8"))
+    add_valid_team_dag(run_state)
+    duplicate_output = dict(run_state["team_output_artifacts"][0])
+    duplicate_output["artifact_id"] = "TEAM-IDEA-DUPLICATE"
+    duplicate_output["path"] = "team-outputs/idea-discovery-team-duplicate.md"
+    run_state["team_output_artifacts"].append(duplicate_output)
+    run_state_path.write_text(json.dumps(run_state, indent=2), encoding="utf-8")
+
+    result = run_validator_path(bundle)
+
+    assert result.returncode == 1
+    assert "TEAM_OUTPUT_DUPLICATE" in combined_output(result)
+
+
+def test_duplicate_complete_team_output_artifact_id_fails(tmp_path: Path) -> None:
+    bundle = tmp_path / "bundle"
+    shutil.copytree(FIXTURES / "valid_full_protocol_bundle", bundle)
+    run_state_path = bundle / "run_state.json"
+    run_state = json.loads(run_state_path.read_text(encoding="utf-8"))
+    add_valid_team_dag(run_state)
+    run_state["team_output_artifacts"][1]["artifact_id"] = "TEAM-IDEA-001"
+    run_state["team_output_artifacts"][1]["depends_on_outputs"] = []
+    run_state_path.write_text(json.dumps(run_state, indent=2), encoding="utf-8")
+
+    result = run_validator_path(bundle)
+
+    assert result.returncode == 1
+    assert "TEAM_OUTPUT_DUPLICATE_ARTIFACT_ID" in combined_output(result)
+
+
+def test_team_output_dependency_cannot_self_reference(tmp_path: Path) -> None:
+    bundle = tmp_path / "bundle"
+    shutil.copytree(FIXTURES / "valid_full_protocol_bundle", bundle)
+    run_state_path = bundle / "run_state.json"
+    run_state = json.loads(run_state_path.read_text(encoding="utf-8"))
+    add_valid_team_dag(run_state)
+    run_state["team_output_artifacts"][1]["depends_on_outputs"] = ["TEAM-EXPERIMENT-001"]
+    run_state_path.write_text(json.dumps(run_state, indent=2), encoding="utf-8")
+
+    result = run_validator_path(bundle)
+
+    assert result.returncode == 1
+    assert "TEAM_OUTPUT_DEPENDENCY_SELF_REFERENCE" in combined_output(result)
+
+
+def test_team_output_dependency_must_reference_prior_phase(tmp_path: Path) -> None:
+    bundle = tmp_path / "bundle"
+    shutil.copytree(FIXTURES / "valid_full_protocol_bundle", bundle)
+    run_state_path = bundle / "run_state.json"
+    run_state = json.loads(run_state_path.read_text(encoding="utf-8"))
+    add_valid_team_dag(run_state)
+    run_state["team_output_artifacts"][0]["depends_on_outputs"] = ["TEAM-EXPERIMENT-001"]
+    run_state_path.write_text(json.dumps(run_state, indent=2), encoding="utf-8")
+
+    result = run_validator_path(bundle)
+
+    assert result.returncode == 1
+    assert "TEAM_OUTPUT_DEPENDENCY_ORDER_INVALID" in combined_output(result)
 
 
 def test_missing_run_state_required_field_fails_without_jsonschema(tmp_path: Path) -> None:

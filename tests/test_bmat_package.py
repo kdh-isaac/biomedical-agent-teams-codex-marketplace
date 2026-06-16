@@ -64,6 +64,40 @@ class BmatPackageTest(unittest.TestCase):
         self.assertIn(f"| plugin_version | {version} |", workflow_template)
         self.assertIn(f"| workflow_version | {version} |", passport_template)
 
+    def test_workflow_label_vocabulary_is_consistent(self):
+        expected_labels = {
+            "Full protocol followed",
+            "Contract-shaped artifact bundle",
+            "Compact standard workflow",
+            "Biomedical Agent Teams-informed narrative review",
+            "Limited capability-downgraded workflow",
+            "Partial workflow; formal gates skipped",
+            "Blocked",
+        }
+        workflow_schema = load_json(SKILL_ROOT / "contracts" / "workflow-run.schema.json")
+        workflow_labels = set(workflow_schema["properties"]["final_label"]["enum"])
+        self.assertEqual(workflow_labels, expected_labels)
+
+        surfaces = {
+            "SKILL.md": SKILL_ROOT / "SKILL.md",
+            "workflow-run-template.md": SKILL_ROOT / "templates" / "workflow-run-template.md",
+            "integrity-gate-template.md": SKILL_ROOT / "templates" / "integrity-gate-template.md",
+            "biomedical-research-council.md": SKILL_ROOT / "commands" / "biomedical-research-council.md",
+            "bmat_validate.py": SKILL_ROOT / "scripts" / "bmat_validate.py",
+        }
+        for name, path in surfaces.items():
+            text = path.read_text(encoding="utf-8")
+            with self.subTest(surface=name):
+                for label in expected_labels:
+                    self.assertIn(label, text)
+                self.assertNotIn("Limited / capability-downgraded workflow", text)
+
+        for command in (SKILL_ROOT / "commands").glob("*.md"):
+            text = command.read_text(encoding="utf-8")
+            with self.subTest(command=command.name):
+                self.assertNotIn("compact or partial workflow", text)
+                self.assertNotIn("label the result as a compact or partial", text)
+
     def test_router_aliases_match_source_manifest_commands(self):
         source_manifest = load_json(SKILL_ROOT / "source-manifest.json")
         skill_text = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
@@ -78,15 +112,18 @@ class BmatPackageTest(unittest.TestCase):
                 with self.subTest(markdown=markdown.relative_to(SKILL_ROOT), reference=ref):
                     self.assertTrue((SKILL_ROOT / ref).exists(), ref)
 
-    def test_bundled_resources_are_advertised_by_router(self):
-        source_manifest = load_json(SKILL_ROOT / "source-manifest.json")
+    def test_router_delegates_bundled_resource_inventory_to_manifest(self):
         skill_text = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
-        for contract in source_manifest["contracts"]:
-            self.assertIn(f"contracts/{contract}.json", skill_text)
-        for template in source_manifest["templates"]:
-            self.assertIn(f"templates/{template}.md", skill_text)
-        for reference in source_manifest["references"]:
-            self.assertIn(f"references/{reference}.md", skill_text)
+        source_manifest = load_json(SKILL_ROOT / "source-manifest.json")
+
+        self.assertIn("source-manifest.json", skill_text)
+        self.assertIn("scripts/bmat_docs_list.py", skill_text)
+        self.assertIn("scripts/bmat_package_check.py", skill_text)
+        self.assertIn("Do not load every agent, command, reference, contract, or template by default.", skill_text)
+
+        for collection in ("contracts", "templates", "references"):
+            self.assertIsInstance(source_manifest[collection], list)
+            self.assertGreater(len(source_manifest[collection]), 0)
 
     def test_all_command_recipes_have_v03_preflight_language(self):
         for command in (SKILL_ROOT / "commands").glob("*.md"):
@@ -153,11 +190,12 @@ class BmatPackageTest(unittest.TestCase):
         self.assertIn("| selective_review_outputs |", workflow_template)
         self.assertIn("selective_review_outputs when used", workflow_template)
 
-    def test_readme_workflow_structure_matches_v043_model(self):
+    def test_readme_workflow_structure_matches_current_model(self):
+        version = (SKILL_ROOT / "VERSION").read_text(encoding="utf-8").strip()
         for readme in (ROOT / "README.md", ROOT / "plugins" / "biomedical-agent-teams" / "README.md"):
             text = readme.read_text(encoding="utf-8")
             with self.subTest(readme=readme.relative_to(ROOT)):
-                self.assertIn("accTitle: BMAT v0.4.3 Workflow Structure", text)
+                self.assertIn(f"accTitle: BMAT v{version} Workflow Structure", text)
                 self.assertIn("Runtime, scope, source, and strategy lock", text)
                 self.assertIn("team_level_selective_dag", text)
                 self.assertIn("team_output_artifacts", text)
