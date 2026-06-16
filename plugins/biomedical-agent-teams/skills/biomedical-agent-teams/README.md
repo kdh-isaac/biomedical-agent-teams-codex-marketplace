@@ -135,38 +135,42 @@ templates, contracts, and scripts that are lazy-loaded only when needed.
 ```mermaid
 flowchart TD
     accTitle: BMAT v0.4.9 Workflow Structure
-    accDescr: Vertical BMAT workflow spine with optional loop, team DAG, and reviewer lanes feeding back into the central ledger.
+    accDescr: Router-first BMAT workflow with lazy-loaded commands, artifact spine, optional team DAG, reviewer, and loop lanes, deterministic validators, and golden eval release gates.
 
-    request["User request or BMAT alias"]
-    lock["1. Runtime, scope, source, and strategy lock"]
-    route{"2. Execution strategy"}
-    spine["3. Selected inline specialist work"]
-    ledger["4. Central claim ledger<br/>source corpus<br/>workflow-run state"]
-    synth["5. Ledger-only synthesis"]
-    release{"6. Release gates<br/>post-write + bmat_validate.py"}
-    label["7. Final workflow label<br/>Full / Contract / Compact / Limited / Partial / Blocked"]
+    request["User request<br/>or BMAT alias"]
+    router["Lightweight SKILL.md router<br/>select narrow command recipe"]
+    preflight["Runtime capability preflight<br/>scope + source + risk + strategy"]
+    source_lock["Source corpus lock<br/>PMID / DOI / accession / dataset provenance"]
+    strategy{"Execution strategy"}
+    inline["Inline command recipe work<br/>lead-controlled specialist synthesis"]
+    ledger["Central artifact spine<br/>claim ledger + workflow-run state + stage evaluation"]
+    postwrite["Post-write validation<br/>ledger-only final wording"]
+    release{"Release gate"}
+    label["Final workflow label<br/>Full / Contract / Compact / Limited / Partial / Blocked"]
 
-    request --> lock --> route --> spine --> ledger --> synth --> release --> label
+    request --> router --> preflight --> source_lock --> strategy
+    strategy --> inline --> ledger --> postwrite --> release --> label
 
-    subgraph team_dag["Optional lane: team_level_selective_dag"]
+    subgraph team_dag["Optional team-level selective DAG"]
         direction TB
-        t1["Phase 1 teams<br/>idea / omics / translational"]
-        t2["Phase 2 teams<br/>experiment design / evidence audit"]
-        tout["team_output_artifacts<br/>artifact path + checks + dependencies"]
-        tgate{"team_spawn_outputs<br/>stage pass?"}
-        t1 --> t2 --> tout --> tgate
+        team_plan["team_spawn_lanes<br/>phase + depends_on + nested policy"]
+        phase1["Phase 1 outputs<br/>idea / omics / translational"]
+        phase2["Phase 2 outputs<br/>experiment design / evidence audit"]
+        team_outputs["team_output_artifacts<br/>artifact_id + path + checks + ledger_handoff"]
+        dag_guard{"bmat_validate.py DAG guard<br/>unique IDs + prior-phase dependencies"}
+        team_plan --> phase1 --> phase2 --> team_outputs --> dag_guard
     end
 
-    subgraph review_lane["Optional lane: selective spawned review"]
+    subgraph review_lane["Optional selective spawned review"]
         direction TB
         registry["agent-registry.json<br/>codex-agents/*.toml"]
-        instances["spawned_agent_instances"]
+        instances["spawned_agent_instances<br/>unique instance_id + output_artifact"]
         rcontract["spawned-agent-output contract"]
         rhandoff["accepted findings<br/>ledger handoff"]
         registry --> instances --> rcontract --> rhandoff
     end
 
-    subgraph loop_layer["Optional lane: recurring loop layer"]
+    subgraph loop_layer["Optional recurring loop"]
         direction TB
         loop_recipe["loops/*.md recipe"]
         loop_state["loop_state.json"]
@@ -174,23 +178,34 @@ flowchart TD
         loop_recipe --> loop_state --> loop_check
     end
 
-    route -. "broad independent axes" .-> t1
-    tgate --> ledger
+    subgraph eval_gate["Package and release validation"]
+        direction TB
+        package_check["bmat_package_check.py<br/>router size + lazy-load references"]
+        selftest["bmat_selftest.py<br/>dependency-free smoke"]
+        golden_schema["validate_golden_eval_schema.py"]
+        golden_gate["run_golden_eval.py --strict --gate<br/>PMID drift + contradiction + overclaim"]
+        package_check --> selftest --> golden_schema --> golden_gate
+    end
+
+    strategy -. "broad dependent axes" .-> team_plan
+    dag_guard --> ledger
     ledger -. "independent audit needed" .-> registry
     rhandoff --> ledger
-    route -. "watch / inbox / triage" .-> loop_recipe
+    strategy -. "watch / inbox / triage" .-> loop_recipe
+    strategy -. "package maintenance" .-> package_check
     loop_check --> ledger
-    loop_check --> release
+    golden_gate --> release
 ```
 
-The main workflow progresses vertically from request lock to final label. The
-lead owns the lock, selected inline work, claim ledger, workflow-run state, and
-final synthesis. Optional lanes run only when the strategy calls for them, then
-feed evidence back into the ledger: team DAG outputs are proven by
-`team_output_artifacts`, reviewer execution is proven by
-`spawned_agent_instances`, and recurring loops are checked by
-`bmat_loop_check.py`. Full-protocol release requires the post-write validator
-and `bmat_validate.py` to pass against the complete artifact bundle.
+The workflow is router-first: `SKILL.md` stays small and loads only the selected
+command recipe. The lead agent owns preflight, source locking, the central
+ledger, post-write validation, and the final label. Optional lanes feed evidence
+back into that artifact spine. Team DAG claims are proven by unique
+`team_spawn_lanes` and `team_output_artifacts` records with prior-phase
+dependencies; reviewer execution is proven by unique `spawned_agent_instances`;
+recurring loops are checked by `bmat_loop_check.py`. Full-protocol release
+requires post-write validation and `bmat_validate.py` on the complete bundle,
+while package releases additionally run the package/selftest/golden-eval gates.
 
 ## v0.3.6 Updates
 
