@@ -203,6 +203,48 @@ class BmatPackageTest(unittest.TestCase):
                 self.assertIn("spawned_agent_instances", text)
                 self.assertIn("bmat_loop_check.py", text)
 
+    def test_version_is_consistent_across_all_declared_locations(self):
+        """Every place in the repo that declares a standalone package version
+        must match VERSION exactly. This is a deliberately broad, low-effort
+        drift guard: add new files/fields here rather than letting a new
+        hard-coded version literal go unchecked (see the D2/D9 hygiene pass)."""
+        version = (SKILL_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+
+        readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn(
+            f"Current plugin version: `{version}`.",
+            readme_text,
+            "top-level README.md 'Current plugin version' line is out of sync with VERSION",
+        )
+
+        pyproject_text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        self.assertIn(
+            f'version = "{version}"',
+            pyproject_text,
+            "pyproject.toml version is out of sync with VERSION",
+        )
+
+        skill_md_text = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(
+            f'version: "{version}"',
+            skill_md_text,
+            "SKILL.md frontmatter version is out of sync with VERSION",
+        )
+
+        for json_path, key in (
+            (ROOT / "plugins" / "biomedical-agent-teams" / ".codex-plugin" / "plugin.json", "version"),
+            (SKILL_ROOT / "manifest.json", "version"),
+            (SKILL_ROOT / "manifest.json", "adapter_version"),
+            (SKILL_ROOT / "agent-registry.json", "version"),
+            (SKILL_ROOT / "source-manifest.json", "version"),
+        ):
+            with self.subTest(json_path=json_path.relative_to(ROOT), key=key):
+                self.assertEqual(load_json(json_path)[key], version)
+
+        for toml_path in sorted((SKILL_ROOT / "codex-agents").glob("*.toml")):
+            with self.subTest(toml_path=toml_path.relative_to(ROOT)):
+                self.assertIn(f'version = "{version}"', toml_path.read_text(encoding="utf-8"))
+
     @unittest.skipUnless(importlib.util.find_spec("jsonschema"), "jsonschema is not installed")
     def test_v03_schema_samples_validate(self):
         from jsonschema import Draft202012Validator

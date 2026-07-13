@@ -117,9 +117,39 @@ additionally run the package/selftest/golden-eval gates.
 The 0.4.9 package is validated with:
 
 ```powershell
+python -m pip install ".[dev]"
 python plugins/biomedical-agent-teams/skills/biomedical-agent-teams/scripts/bmat_package_check.py --root plugins/biomedical-agent-teams
 python plugins/biomedical-agent-teams/skills/biomedical-agent-teams/scripts/bmat_selftest.py --root plugins/biomedical-agent-teams
-uvx --with jsonschema pytest plugins/biomedical-agent-teams/skills/biomedical-agent-teams/tests -q
+python -m pytest -q
 python plugins/biomedical-agent-teams/skills/biomedical-agent-teams/evals/validate_golden_eval_schema.py --tasks plugins/biomedical-agent-teams/skills/biomedical-agent-teams/evals/golden_tasks.jsonl --outputs plugins/biomedical-agent-teams/skills/biomedical-agent-teams/evals/sample_outputs.jsonl
 python plugins/biomedical-agent-teams/skills/biomedical-agent-teams/evals/run_golden_eval.py --tasks plugins/biomedical-agent-teams/skills/biomedical-agent-teams/evals/golden_tasks.jsonl --outputs plugins/biomedical-agent-teams/skills/biomedical-agent-teams/evals/sample_outputs.jsonl --strict --gate
 ```
+
+This is exactly what `.github/workflows/ci.yml` runs on every push/PR across
+Ubuntu, macOS, and Windows for Python 3.10-3.13 (no live network or model
+calls; all checks are deterministic and offline).
+
+## Release Process
+
+1. Decide the new version (semver). Update it in all four places together:
+   `plugins/biomedical-agent-teams/skills/biomedical-agent-teams/VERSION`,
+   `plugins/biomedical-agent-teams/.codex-plugin/plugin.json` (`version`),
+   `plugins/biomedical-agent-teams/skills/biomedical-agent-teams/manifest.json`
+   (`version` and `adapter_version`), and
+   `plugins/biomedical-agent-teams/skills/biomedical-agent-teams/agent-registry.json`
+   (`version`).
+2. Add a `## v<version> Updates` section to both `README.md` and
+   `plugins/biomedical-agent-teams/README.md`, describing what changed.
+3. Run the Validation commands above locally; they must all pass.
+4. Note whether the change is behavior-preserving (patch/minor) or changes
+   validator pass/fail behavior for existing bundles (treat as a
+   behavior-change release even if the version bump looks small, and say so
+   explicitly in the changelog entry).
+5. Commit, then tag and push: `git tag v<version> && git push origin main
+   v<version>`.
+6. `.github/workflows/release.yml` runs on the tag push. It refuses to
+   release if the tag does not match `VERSION`/`plugin.json`/`manifest.json`,
+   reruns the full gate suite, and publishes a GitHub Release with a
+   `release-manifest.json` (commit SHA, gates passed, and an explicit
+   `benchmark_status` field so a release never implies a live-model benchmark
+   result it did not actually run).
