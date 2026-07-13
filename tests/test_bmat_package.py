@@ -196,7 +196,7 @@ class BmatPackageTest(unittest.TestCase):
             text = readme.read_text(encoding="utf-8")
             with self.subTest(readme=readme.relative_to(ROOT)):
                 self.assertIn(f"accTitle: BMAT v{version} Workflow Structure", text)
-                self.assertIn("Runtime, scope, source, and strategy lock", text)
+                self.assertIn("scope + source + risk + strategy", text)
                 self.assertIn("team_level_selective_dag", text)
                 self.assertIn("team_output_artifacts", text)
                 self.assertIn("selective spawned review", text)

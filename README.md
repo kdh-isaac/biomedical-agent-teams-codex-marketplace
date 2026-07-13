@@ -92,13 +92,17 @@ flowchart TD
 
 The workflow is router-first: `SKILL.md` stays small and loads only the selected
 command recipe. The lead agent owns preflight, source locking, the central
-ledger, post-write validation, and the final label. Optional lanes feed evidence
-back into that artifact spine. Team DAG claims are proven by unique
-`team_spawn_lanes` and `team_output_artifacts` records with prior-phase
-dependencies; reviewer execution is proven by unique `spawned_agent_instances`;
-recurring loops are checked by `bmat_loop_check.py`. Full-protocol release
-requires post-write validation and `bmat_validate.py` on the complete bundle,
-while package releases additionally run the package/selftest/golden-eval gates.
+ledger, post-write validation, and the final label. Execution strategy is
+either `inline_first_selective_review` (default, lead-controlled inline work
+with selected reviewer roles) or `team_level_selective_dag` for broad,
+dependent decisions that spawn command-level teams across the DAG above.
+Optional lanes feed evidence back into that artifact spine. Team DAG claims
+are proven by unique `team_spawn_lanes` and `team_output_artifacts` records
+with prior-phase dependencies; reviewer execution is proven by unique
+`spawned_agent_instances`; recurring loops are checked by
+`bmat_loop_check.py`. Full-protocol release requires post-write validation
+and `bmat_validate.py` on the complete bundle, while package releases
+additionally run the package/selftest/golden-eval gates.
 
 ## Contents
 

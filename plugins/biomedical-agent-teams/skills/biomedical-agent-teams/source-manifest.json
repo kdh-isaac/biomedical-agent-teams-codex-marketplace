@@ -228,12 +228,6 @@
     "minimum-viable-governance-tier-and-by-reference-state",
     "filled-examples-in-claim-ledger-and-source-corpus-templates"
   ],
-  "new_in_v0_4_3": [
-    "omics-run-reviewer-spawn-floor",
-    "core-omics-reviewer-default-selection",
-    "validator-policy-for-zero-reviewer-budget-in-omics-run",
-    "explicit-downgrade-required-when-omics-reviewer-spawn-is-unavailable"
-  ],
   "new_in_v0_3_6": [
     "label-honesty-patch-for-contract-described-vs-validator-enforced-workflows",
     "bmat_validate_cli_for_schema_and_policy_validation",
@@ -266,6 +260,12 @@
     "nested-spawn-policy-enforcement-for-team-dag",
     "workflow-template-and-hybrid-policy-team-dag-verification-docs",
     "package-metadata-version-bump-to-0-4-1"
+  ],
+  "new_in_v0_4_3": [
+    "omics-run-reviewer-spawn-floor",
+    "core-omics-reviewer-default-selection",
+    "validator-policy-for-zero-reviewer-budget-in-omics-run",
+    "explicit-downgrade-required-when-omics-reviewer-spawn-is-unavailable"
   ],
   "new_in_v0_4_4": [
     "package-wide-bmat-package-check-cli",

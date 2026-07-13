@@ -334,10 +334,12 @@ while package releases additionally run the package/selftest/golden-eval gates.
 
 ## Install
 
-From any shell:
+Clone this repository, then register the local marketplace path (replace
+`<path-to-clone>` with wherever you cloned it):
 
 ```bash
-codex plugin marketplace add "G:\내 드라이브\work\codex\work\plugins\biomedical-agent-teams-codex-marketplace"
+git clone https://github.com/kdh-isaac/biomedical-agent-teams-codex-marketplace
+codex plugin marketplace add "<path-to-clone>"
 codex plugin add biomedical-agent-teams@biomedical-agent-teams-marketplace
 ```
 

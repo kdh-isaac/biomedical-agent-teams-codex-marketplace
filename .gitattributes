@@ -1,0 +1,28 @@
+# Normalize line endings for all text files to LF, regardless of the
+# committing platform's git core.autocrlf setting. This closes the
+# CRLF/LF portability gap identified in the BMAT hardening roadmap (D4):
+# without this file, a Windows checkout with core.autocrlf=true silently
+# rewrites every tracked text file to CRLF on checkout, producing
+# whole-repo diffs that are pure line-ending noise and can mask or
+# corrupt real content changes (e.g. trailing-byte corruption).
+* text=auto eol=lf
+
+# Explicit overrides for common types, in case `text=auto` misdetects
+# a file as binary.
+*.md text eol=lf
+*.json text eol=lf
+*.py text eol=lf
+*.toml text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+VERSION text eol=lf
+LICENSE text eol=lf
+
+# Explicit binary types (never subject to eol conversion).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary

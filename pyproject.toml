@@ -1,0 +1,19 @@
+[project]
+name = "biomedical-agent-teams-codex-marketplace"
+version = "0.4.9"
+description = "Codex Desktop marketplace package for the Biomedical Agent Teams (BMAT) plugin."
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "jsonschema>=4.18",
+    "tomli>=2.0; python_version < '3.11'",
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+    "plugins/biomedical-agent-teams/skills/biomedical-agent-teams/tests",
+]
